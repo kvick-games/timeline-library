@@ -3958,7 +3958,12 @@ const FRACTAL_BAILOUT_RADIUS_SQUARED = 4096;
 const FRACTAL_BASE_SCALE = 8;
 const FRACTAL_PIXELS_PER_FRAME = 12000;
 const FRACTAL_BASE_FADE_FRAMES = 10;
-const FRACTAL_REVEAL_FRAMES = 70;
+// The sweep starts moving right away but takes roughly twenty seconds to
+// finish — an ambient slow bloom rather than a transition you wait on. A
+// front this slow doesn't need 60fps: redrawing every third frame is
+// imperceptible and cuts the remap work by two-thirds.
+const FRACTAL_REVEAL_FRAMES = 1300;
+const FRACTAL_REVEAL_REDRAW_STRIDE = 3;
 const FRACTAL_REVEAL_FEATHER = 0.09;
 const FRACTAL_EMBER_STRENGTH = 0.35;
 
@@ -4277,6 +4282,10 @@ function ArticleFractalBackdrop({accent, seedKey}: {accent: string; seedKey: str
       }
 
       revealFrame += 1;
+      if (revealFrame % FRACTAL_REVEAL_REDRAW_STRIDE !== 0 && revealFrame < FRACTAL_REVEAL_FRAMES) {
+        frameHandle = window.requestAnimationFrame(step);
+        return;
+      }
       const progress = Math.min(1, revealFrame / FRACTAL_REVEAL_FRAMES);
       // Push the front past 1 + feather so every pixel fully saturates.
       const front = easeOutCubic(progress) * (1 + FRACTAL_REVEAL_FEATHER * 2);
