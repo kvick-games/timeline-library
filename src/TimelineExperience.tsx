@@ -8410,7 +8410,8 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
 
   const isInteractiveTouchTarget = (target: EventTarget | null) =>
     target instanceof Element &&
-    Boolean(target.closest('button, a, input, label, select, textarea, [data-timeline-pin]'));
+    !target.closest('[data-timeline-pin]') &&
+    Boolean(target.closest('button, a, input, label, select, textarea, [data-row-focus-label]'));
 
   const getTouchPoint = (touch: React.Touch): PointerPoint => ({
     clientX: touch.clientX,
@@ -8491,6 +8492,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
         resetMobileTouchGesture(event.touches);
       }
 
+      event.preventDefault();
       return;
     }
 
@@ -8506,6 +8508,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
 
     if (gesture.type !== 'pinch') {
       resetMobileTouchGesture(event.touches);
+      event.preventDefault();
       return;
     }
 
@@ -8524,6 +8527,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
     gesture.lastMidpointY = midpoint.clientY;
     gesture.lastX = midpoint.clientX;
     gesture.lastY = midpoint.clientY;
+    event.preventDefault();
   };
 
   const handleMobileTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {

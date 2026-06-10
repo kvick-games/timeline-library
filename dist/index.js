@@ -5163,7 +5163,7 @@ function hs({ definition: t }) {
       camera: p,
       zoom: re.current
     }, I.current = p, $t(K.current, p, re.current);
-  }, on = (o) => o instanceof Element && !!o.closest("button, a, input, label, select, textarea, [data-timeline-pin]"), st = (o) => ({
+  }, on = (o) => o instanceof Element && !o.closest("[data-timeline-pin]") && !!o.closest("button, a, input, label, select, textarea, [data-row-focus-label]"), st = (o) => ({
     clientX: o.clientX,
     clientY: o.clientY
   }), yt = (o) => {
@@ -5213,13 +5213,14 @@ function hs({ definition: t }) {
         rn(wt, Fr), p.lastX = Ee.clientX, p.lastY = Ee.clientY;
       } else
         yt(o.touches);
+      o.preventDefault();
       return;
     }
     if (o.touches.length < 2)
       return;
     const y = st(o.touches[0]), U = st(o.touches[1]), V = an(y, U), ue = Math.max(tn(y, U), 1);
     if (nn(V, c), p.type !== "pinch") {
-      yt(o.touches);
+      yt(o.touches), o.preventDefault();
       return;
     }
     const ge = V.clientX - p.lastMidpointX, ye = V.clientY - p.lastMidpointY;
@@ -5228,7 +5229,7 @@ function hs({ definition: t }) {
     Ja((Ee) => Ee * we, {
       x: be.current ?? c.clientWidth / 2,
       y: Te.current ?? c.clientHeight / 2
-    }), p.distance = ue, p.lastMidpointX = V.clientX, p.lastMidpointY = V.clientY, p.lastX = V.clientX, p.lastY = V.clientY;
+    }), p.distance = ue, p.lastMidpointX = V.clientX, p.lastMidpointY = V.clientY, p.lastX = V.clientX, p.lastY = V.clientY, o.preventDefault();
   }, _r = (o) => {
     const c = Pe.current;
     if (yt(o.touches), ee(I.current), !c || c.type !== "pan" || o.changedTouches.length === 0)
