@@ -1,5 +1,5 @@
 import { jsx as i, jsxs as h, Fragment as gt } from "react/jsx-runtime";
-import Nt, { useState as ve, useRef as j, useMemo as ge, useEffect as De, useCallback as sn } from "react";
+import Nt, { useState as xe, useRef as j, useMemo as ve, useEffect as De, useCallback as sn } from "react";
 import { flushSync as kn } from "react-dom";
 import { EyeOff as Rn, Eye as An, RotateCcw as Vt, Layers3 as rt, ArrowLeft as $r, CalendarDays as Gt, BookOpen as In, ExternalLink as Ur, ArrowUp as Xr, ArrowDown as Yr, X as Ln, SlidersHorizontal as zr, ChevronDown as Br, ArrowRight as Or, Sparkles as Wr, Check as Hr, BrainCircuit as Vr, Globe2 as Gr, Image as jr, Clapperboard as Pn, AudioLines as qr, Box as Kr, Code2 as Zr, Bot as Qr, CarFront as Jr } from "lucide-react";
 import { AnimatePresence as He, motion as me } from "motion/react";
@@ -8,11 +8,11 @@ function ti(t, a, n, r) {
   const e = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return `${e(t)}-${e(a)}-${e(n)}-${r}`;
 }
-function Re(t) {
+function Ae(t) {
   return /* @__PURE__ */ new Date(`${t}T00:00:00Z`);
 }
-function ke(t, a = { month: "short", day: "numeric", year: "numeric" }, n = "day") {
-  const r = typeof t == "string" ? Re(t) : t;
+function Re(t, a = { month: "short", day: "numeric", year: "numeric" }, n = "day") {
+  const r = typeof t == "string" ? Ae(t) : t;
   return Number.isNaN(r.getTime()) ? typeof t == "string" ? t : "Date unavailable" : n === "year" ? r.toLocaleDateString("en-US", {
     timeZone: "UTC",
     year: "numeric"
@@ -27,16 +27,16 @@ function ke(t, a = { month: "short", day: "numeric", year: "numeric" }, n = "day
 }
 function _n(t, a, n = "day", r = "day") {
   if (!a || a === t)
-    return ke(t, void 0, n);
-  const e = Re(t), s = Re(a);
+    return Re(t, void 0, n);
+  const e = Ae(t), s = Ae(a);
   if (Number.isNaN(e.getTime()) || Number.isNaN(s.getTime()))
     return `${t} - ${a}`;
   if (s.getTime() < e.getTime())
-    return `${ke(t, void 0, n)} - ${ke(a, void 0, r)}`;
+    return `${Re(t, void 0, n)} - ${Re(a, void 0, r)}`;
   if (n !== "day" || r !== "day")
-    return `${ke(e, void 0, n)} - ${ke(s, void 0, r)}`;
+    return `${Re(e, void 0, n)} - ${Re(s, void 0, r)}`;
   const l = e.getUTCFullYear() === s.getUTCFullYear();
-  return l && e.getUTCMonth() === s.getUTCMonth() ? `${ke(e, { month: "short", day: "numeric" })}-${ke(s, { day: "numeric" })}, ${s.getUTCFullYear()}` : l ? `${ke(e, { month: "short", day: "numeric" })} - ${ke(s, { month: "short", day: "numeric", year: "numeric" })}` : `${ke(e)} - ${ke(s)}`;
+  return l && e.getUTCMonth() === s.getUTCMonth() ? `${Re(e, { month: "short", day: "numeric" })}-${Re(s, { day: "numeric" })}, ${s.getUTCFullYear()}` : l ? `${Re(e, { month: "short", day: "numeric" })} - ${Re(s, { month: "short", day: "numeric", year: "numeric" })}` : `${Re(e)} - ${Re(s)}`;
 }
 function Fn(t, a, n) {
   return n.articleSlug ?? ti(t, a, n.name, n.date);
@@ -54,11 +54,11 @@ function ps({
   return r.forEach((s) => {
     s.productLines.forEach((l) => {
       const u = [...l.releases].sort(
-        (d, m) => Re(d.date).getTime() - Re(m.date).getTime()
+        (d, m) => Ae(d.date).getTime() - Ae(m.date).getTime()
       ), f = u.map((d) => Fn(s.id, l.id, d));
       u.forEach((d, m) => {
         var R, $;
-        const x = f[m], w = a[d.eventType ?? n] ?? a[n], b = Re(d.date), v = d.endDate ? Re(d.endDate) : b, N = Number.isNaN(b.getTime()) || Number.isNaN(v.getTime()) ? 1 : Math.max(1, Math.round((v.getTime() - b.getTime()) / ei) + 1);
+        const x = f[m], w = a[d.eventType ?? n] ?? a[n], b = Ae(d.date), v = d.endDate ? Ae(d.endDate) : b, N = Number.isNaN(b.getTime()) || Number.isNaN(v.getTime()) ? 1 : Math.max(1, Math.round((v.getTime() - b.getTime()) / ei) + 1);
         e.push({
           accent: s.accent,
           article: t[x] ?? null,
@@ -67,11 +67,11 @@ function ps({
           companyId: s.id,
           companyName: s.name,
           date: d.date,
-          dateLabel: ke(d.date, void 0, d.datePrecision),
+          dateLabel: Re(d.date, void 0, d.datePrecision),
           dateRangeLabel: _n(d.date, d.endDate, d.datePrecision),
           durationDays: N,
           endDate: d.endDate,
-          endDateLabel: d.endDate ? ke(d.endDate) : void 0,
+          endDateLabel: d.endDate ? Re(d.endDate) : void 0,
           eventKind: w.kind,
           eventType: w.id,
           eventTypeLabel: w.label,
@@ -147,7 +147,7 @@ function qe() {
   return oe().copy;
 }
 function at() {
-  return Re(oe().startDate);
+  return Ae(oe().startDate);
 }
 function Ut(t, a) {
   if (t.length !== a.length)
@@ -199,7 +199,7 @@ function da(t, a) {
 function cn(t) {
   return t.productLines.reduce((a, n) => {
     const r = n.releases.reduce((e, s) => {
-      const l = Re(s.date).getTime();
+      const l = Ae(s.date).getTime();
       return Number.isNaN(l) ? e : Math.max(e, l);
     }, 0);
     return Math.max(a, r);
@@ -227,7 +227,7 @@ function di(t, a) {
 }
 function Yn(t, a, n, r) {
   var v, N, R, $;
-  const e = Re(n.date), s = n.endDate ? Re(n.endDate) : e, l = Number.isNaN(s.getTime()) ? 0 : Math.round((s.getTime() - at().getTime()) / nt), u = Ma(t, a, n), f = Jn(t, a, n), d = Da(n), m = u.reduce(
+  const e = Ae(n.date), s = n.endDate ? Ae(n.endDate) : e, l = Number.isNaN(s.getTime()) ? 0 : Math.round((s.getTime() - at().getTime()) / nt), u = Ma(t, a, n), f = Jn(t, a, n), d = Da(n), m = u.reduce(
     (q, Q) => Math.max(q, li(Q)),
     40
   ), x = ((N = (v = oe().scoring) == null ? void 0 : v.getTagSignificanceBonus) == null ? void 0 : N.call(v, f)) ?? 0, w = (($ = (R = oe().scoring) == null ? void 0 : R.getGroupRankBonus) == null ? void 0 : $.call(R, t)) ?? 0, b = m + x + w + ci(d.id) + di(l, r);
@@ -542,10 +542,10 @@ function po(t, a) {
         presets: Ma(l, v, T),
         tags: Jn(l, v, T)
       })).sort((T, F) => {
-        const Y = Re(T.date).getTime(), A = Re(F.date).getTime();
+        const Y = Ae(T.date).getTime(), A = Ae(F.date).getTime();
         return Y - A || T.name.localeCompare(F.name);
       }).reduce((T, F) => {
-        const Y = Re(F.date), A = F.endDate ? Re(F.endDate) : Y;
+        const Y = Ae(F.date), A = F.endDate ? Ae(F.endDate) : Y;
         if (Number.isNaN(Y.getTime()))
           return n.push(`${l.name} / ${v.label}: ${F.name}`), T;
         if (F.endDate && Number.isNaN(A.getTime()))
@@ -554,10 +554,10 @@ function po(t, a) {
         return T.push({
           ...F,
           articleSlug: Fn(l.id, v.id, F),
-          dateLabel: ke(Y, void 0, F.datePrecision),
+          dateLabel: Re(Y, void 0, F.datePrecision),
           dateRangeLabel: _n(F.date, F.endDate, F.datePrecision),
           durationDays: ee - H + 1,
-          endDateLabel: F.endDate ? ke(F.endDate) : void 0,
+          endDateLabel: F.endDate ? Re(F.endDate) : void 0,
           endGlobalDay: ee,
           eventKind: ce.kind,
           eventType: ce.id,
@@ -1494,7 +1494,7 @@ function nr({
   onZoomChange: s,
   zoom: l
 }) {
-  const u = j(null), f = j(null), d = j(null), m = j(null), x = j(null), [w, b] = ve(!1), [v, N] = ve(!1), [R, $] = ve(!1), q = ar(l, r, n), Q = 8 + (1 - q) * 84, se = a ? "h-3.5 w-3.5" : "h-4 w-4", J = w || v || R, T = J ? a ? "h-10 min-w-10 px-2 text-[9px]" : "h-11 min-w-11 px-2.5 text-[10px]" : a ? "h-4 min-w-4 px-0 text-[0px]" : "h-5 min-w-5 px-0 text-[0px]", F = a ? "group-hover/zoomrail:h-10 group-hover/zoomrail:min-w-10 group-hover/zoomrail:px-2 group-hover/zoomrail:text-[9px] group-focus-within/zoomrail:h-10 group-focus-within/zoomrail:min-w-10 group-focus-within/zoomrail:px-2 group-focus-within/zoomrail:text-[9px]" : "group-hover/zoomrail:h-11 group-hover/zoomrail:min-w-11 group-hover/zoomrail:px-2.5 group-hover/zoomrail:text-[10px] group-focus-within/zoomrail:h-11 group-focus-within/zoomrail:min-w-11 group-focus-within/zoomrail:px-2.5 group-focus-within/zoomrail:text-[10px]", Y = w ? "text-[var(--ink)] opacity-100" : "opacity-45", A = (g, D = !1) => {
+  const u = j(null), f = j(null), d = j(null), m = j(null), x = j(null), [w, b] = xe(!1), [v, N] = xe(!1), [R, $] = xe(!1), q = ar(l, r, n), Q = 8 + (1 - q) * 84, se = a ? "h-3.5 w-3.5" : "h-4 w-4", J = w || v || R, T = J ? a ? "h-10 min-w-10 px-2 text-[9px]" : "h-11 min-w-11 px-2.5 text-[10px]" : a ? "h-4 min-w-4 px-0 text-[0px]" : "h-5 min-w-5 px-0 text-[0px]", F = a ? "group-hover/zoomrail:h-10 group-hover/zoomrail:min-w-10 group-hover/zoomrail:px-2 group-hover/zoomrail:text-[9px] group-focus-within/zoomrail:h-10 group-focus-within/zoomrail:min-w-10 group-focus-within/zoomrail:px-2 group-focus-within/zoomrail:text-[9px]" : "group-hover/zoomrail:h-11 group-hover/zoomrail:min-w-11 group-hover/zoomrail:px-2.5 group-hover/zoomrail:text-[10px] group-focus-within/zoomrail:h-11 group-focus-within/zoomrail:min-w-11 group-focus-within/zoomrail:px-2.5 group-focus-within/zoomrail:text-[10px]", Y = w ? "text-[var(--ink)] opacity-100" : "opacity-45", A = (g, D = !1) => {
     const O = () => {
       b(g), e == null || e(g);
     };
@@ -2251,7 +2251,7 @@ function Cn({
   );
 }
 function Go({ media: t }) {
-  const [a, n] = ve(!1);
+  const [a, n] = xe(!1);
   return a ? null : /* @__PURE__ */ h("figure", { className: "mt-7 overflow-hidden rounded-[1.25rem] border border-[var(--edge)] bg-[var(--surface)] shadow-[var(--soft-shadow)]", children: [
     /* @__PURE__ */ i(
       "img",
@@ -3433,7 +3433,7 @@ function rs() {
     };
     let M = 0, I = !1, L = null, P = null, g = null, D = null, O = null, K = 0, le = 0, te = 0;
     const be = performance.now(), Te = window.matchMedia("(prefers-reduced-motion: reduce)"), ae = [-1, -1, -1, -1];
-    let Z = [0.5, 0.5], ie = [0, 0], Ae = 0, Ie = null, Le = be;
+    let Z = [0.5, 0.5], ie = [0, 0], Se = 0, Ie = null, Le = be;
     const X = () => {
       const [C, E] = re();
       if ((L == null ? void 0 : L[0].width) === C && L[0].height === E)
@@ -3464,7 +3464,7 @@ function rs() {
       (r.width !== E || r.height !== _) && (r.width = E, r.height = _, e.viewport(0, 0, E, _)), e.useProgram(u), e.uniform2f(q.resolution, E, _), X();
     }, k = (C) => {
       const E = C * 60;
-      Ae *= Math.pow(0.9, E), ie = [
+      Se *= Math.pow(0.9, E), ie = [
         ie[0] * Math.pow(0.94, E),
         ie[1] * Math.pow(0.94, E)
       ];
@@ -3485,7 +3485,7 @@ function rs() {
           ie[1] + (Me[1] - ie[1]) * 0.74
         ];
       }
-      Z = S, Ie = S, Le = G, Ae = Math.min(1, Ae + 0.92), Te.matches && Ue(G);
+      Z = S, Ie = S, Le = G, Se = Math.min(1, Se + 0.92), Te.matches && Ue(G);
     }, ot = () => {
       const C = Math.max(window.innerWidth, 1), E = Math.max(window.innerHeight, 1), S = Array.from(document.querySelectorAll(".timeline-fluid-obstacle")).find((_e) => {
         const Me = _e.getBoundingClientRect(), Xe = window.getComputedStyle(_e);
@@ -3500,20 +3500,20 @@ function rs() {
         Math.max(0, Math.min(1, G.right / C)),
         Math.max(0, Math.min(1, 1 - G.top / E))
       ];
-    }, xe = (C, E) => {
+    }, he = (C, E) => {
       if (!L || !P || !g || !D || !O)
         return;
       const _ = r.width / Math.max(r.height, 1);
       let S = L[K], G = L[1 - K];
       const _e = g[te];
-      e.bindFramebuffer(e.FRAMEBUFFER, G.framebuffer), e.viewport(0, 0, G.width, G.height), e.useProgram(f), $(f), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, _e.texture), e.uniform1i(Q.velocityMap, 0), e.uniform1i(Q.dyeMap, 1), e.uniform2f(Q.texel, 1 / S.width, 1 / S.height), e.uniform2f(Q.pointerPosition, Z[0], Z[1]), e.uniform2f(Q.pointerVelocity, ie[0], ie[1]), e.uniform1f(Q.pointerActive, a.current ? Ae : 0), e.uniform1f(Q.pointerRadius, 0.088), e.uniform1f(Q.deltaTime, C), e.uniform1f(Q.elapsedTime, E), e.uniform1f(Q.aspect, _), e.uniform4f(Q.emitterSeed, pe[0], pe[1], pe[2], pe[3]), e.drawArrays(e.TRIANGLES, 0, 6), K = 1 - K, S = L[K], e.bindFramebuffer(e.FRAMEBUFFER, O.framebuffer), e.viewport(0, 0, O.width, O.height), e.useProgram(d), $(d), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(se.velocityMap, 0), e.uniform2f(se.texel, 1 / S.width, 1 / S.height), e.uniform1f(se.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), G = L[1 - K], e.bindFramebuffer(e.FRAMEBUFFER, G.framebuffer), e.viewport(0, 0, G.width, G.height), e.useProgram(m), $(m), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, O.texture), e.uniform1i(J.velocityMap, 0), e.uniform1i(J.curlMap, 1), e.uniform2f(J.texel, 1 / S.width, 1 / S.height), e.uniform1f(J.deltaTime, C * 0.25), e.uniform1f(J.strength, 13), e.uniform1f(J.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), K = 1 - K, S = L[K], e.bindFramebuffer(e.FRAMEBUFFER, D.framebuffer), e.viewport(0, 0, D.width, D.height), e.useProgram(x), $(x), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(T.velocityMap, 0), e.uniform2f(T.texel, 1 / S.width, 1 / S.height), e.uniform4f(T.obstacleRect, ae[0], ae[1], ae[2], ae[3]), e.uniform1f(T.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), P.forEach((Fe) => ce(Fe, [0.5, 0, 0, 1])), le = 0;
+      e.bindFramebuffer(e.FRAMEBUFFER, G.framebuffer), e.viewport(0, 0, G.width, G.height), e.useProgram(f), $(f), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, _e.texture), e.uniform1i(Q.velocityMap, 0), e.uniform1i(Q.dyeMap, 1), e.uniform2f(Q.texel, 1 / S.width, 1 / S.height), e.uniform2f(Q.pointerPosition, Z[0], Z[1]), e.uniform2f(Q.pointerVelocity, ie[0], ie[1]), e.uniform1f(Q.pointerActive, a.current ? Se : 0), e.uniform1f(Q.pointerRadius, 0.088), e.uniform1f(Q.deltaTime, C), e.uniform1f(Q.elapsedTime, E), e.uniform1f(Q.aspect, _), e.uniform4f(Q.emitterSeed, pe[0], pe[1], pe[2], pe[3]), e.drawArrays(e.TRIANGLES, 0, 6), K = 1 - K, S = L[K], e.bindFramebuffer(e.FRAMEBUFFER, O.framebuffer), e.viewport(0, 0, O.width, O.height), e.useProgram(d), $(d), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(se.velocityMap, 0), e.uniform2f(se.texel, 1 / S.width, 1 / S.height), e.uniform1f(se.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), G = L[1 - K], e.bindFramebuffer(e.FRAMEBUFFER, G.framebuffer), e.viewport(0, 0, G.width, G.height), e.useProgram(m), $(m), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, O.texture), e.uniform1i(J.velocityMap, 0), e.uniform1i(J.curlMap, 1), e.uniform2f(J.texel, 1 / S.width, 1 / S.height), e.uniform1f(J.deltaTime, C * 0.25), e.uniform1f(J.strength, 13), e.uniform1f(J.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), K = 1 - K, S = L[K], e.bindFramebuffer(e.FRAMEBUFFER, D.framebuffer), e.viewport(0, 0, D.width, D.height), e.useProgram(x), $(x), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(T.velocityMap, 0), e.uniform2f(T.texel, 1 / S.width, 1 / S.height), e.uniform4f(T.obstacleRect, ae[0], ae[1], ae[2], ae[3]), e.uniform1f(T.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), P.forEach((Fe) => ce(Fe, [0.5, 0, 0, 1])), le = 0;
       for (let Fe = 0; Fe < 12; Fe += 1) {
         const de = P[le], Qe = P[1 - le];
         e.bindFramebuffer(e.FRAMEBUFFER, Qe.framebuffer), e.viewport(0, 0, Qe.width, Qe.height), e.useProgram(w), $(w), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, de.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, D.texture), e.uniform1i(F.pressureMap, 0), e.uniform1i(F.divergenceMap, 1), e.uniform2f(F.texel, 1 / de.width, 1 / de.height), e.uniform4f(F.obstacleRect, ae[0], ae[1], ae[2], ae[3]), e.uniform1f(F.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), le = 1 - le;
       }
       G = L[1 - K], e.bindFramebuffer(e.FRAMEBUFFER, G.framebuffer), e.viewport(0, 0, G.width, G.height), e.useProgram(b), $(b), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, P[le].texture), e.uniform1i(Y.velocityMap, 0), e.uniform1i(Y.pressureMap, 1), e.uniform2f(Y.texel, 1 / S.width, 1 / S.height), e.uniform4f(Y.obstacleRect, ae[0], ae[1], ae[2], ae[3]), e.uniform1f(Y.aspect, _), e.drawArrays(e.TRIANGLES, 0, 6), K = 1 - K, S = L[K];
       const Me = g[te], Xe = g[1 - te];
-      e.bindFramebuffer(e.FRAMEBUFFER, Xe.framebuffer), e.viewport(0, 0, Xe.width, Xe.height), e.useProgram(v), $(v), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Me.texture), e.uniform1i(A.velocityMap, 0), e.uniform1i(A.dyeMap, 1), e.uniform2f(A.pointerPosition, Z[0], Z[1]), e.uniform2f(A.pointerVelocity, ie[0], ie[1]), e.uniform1f(A.pointerActive, a.current ? Ae : 0), e.uniform1f(A.pointerRadius, 0.088), e.uniform1f(A.deltaTime, C), e.uniform1f(A.elapsedTime, E), e.uniform1f(A.aspect, _), e.uniform4f(A.emitterSeed, pe[0], pe[1], pe[2], pe[3]), e.drawArrays(e.TRIANGLES, 0, 6), te = 1 - te;
+      e.bindFramebuffer(e.FRAMEBUFFER, Xe.framebuffer), e.viewport(0, 0, Xe.width, Xe.height), e.useProgram(v), $(v), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Me.texture), e.uniform1i(A.velocityMap, 0), e.uniform1i(A.dyeMap, 1), e.uniform2f(A.pointerPosition, Z[0], Z[1]), e.uniform2f(A.pointerVelocity, ie[0], ie[1]), e.uniform1f(A.pointerActive, a.current ? Se : 0), e.uniform1f(A.pointerRadius, 0.088), e.uniform1f(A.deltaTime, C), e.uniform1f(A.elapsedTime, E), e.uniform1f(A.aspect, _), e.uniform4f(A.emitterSeed, pe[0], pe[1], pe[2], pe[3]), e.drawArrays(e.TRIANGLES, 0, 6), te = 1 - te;
     }, Ne = (C) => {
       if (!L || !g)
         return;
@@ -3526,13 +3526,13 @@ function rs() {
       const E = Math.min(Math.max((C - fe) / 1e3, 1 / 120), 1 / 20);
       fe = C;
       const _ = (C - be) / 1e3, S = E * Ke, G = _ * Ke;
-      k(E), xe(S, G), Ne(G);
+      k(E), he(S, G), Ne(G);
     }, Jt = (C) => {
       I || (M = window.requestAnimationFrame(Jt), !document.hidden && Ue(C));
-    }, Se = () => {
+    }, ke = () => {
       I || (Pe(), Ue(be + 1e3), Te.matches || (M = window.requestAnimationFrame(Jt)));
     };
-    return window.addEventListener("resize", Pe), window.addEventListener("pointermove", Ze, { passive: !0 }), Se(), () => {
+    return window.addEventListener("resize", Pe), window.addEventListener("pointermove", Ze, { passive: !0 }), ke(), () => {
       I = !0, window.cancelAnimationFrame(M), window.removeEventListener("resize", Pe), window.removeEventListener("pointermove", Ze), L == null || L.forEach(W), P == null || P.forEach(W), g == null || g.forEach(W), D && W(D), O && W(O), e.deleteBuffer(R), N();
     };
   }, []), /* @__PURE__ */ h(gt, { children: [
@@ -3804,7 +3804,7 @@ function os({
     timelineHeight: g,
     timelineWidth: ce,
     viewport: W
-  }), O = Mt(F, !1, 1, P), [K, le] = ve(null), te = j(null), be = () => {
+  }), O = Mt(F, !1, 1, P), [K, le] = xe(null), te = j(null), be = () => {
     te.current !== null && (window.clearTimeout(te.current), te.current = null);
   }, Te = (k) => {
     be(), le(k);
@@ -4168,11 +4168,11 @@ function ss({
     timelineHeight: L,
     timelineWidth: ee,
     viewport: z
-  }), g = Mt(F, !0, 1, I), [D, O] = ve(null), K = (X) => O(X), le = () => O(null), te = g.find((X) => X.company.id === D) ?? null, Te = Math.max(16, Math.min(126, Math.max(16, z.width - 248 - 12))), ae = te ? ne(
+  }), g = Mt(F, !0, 1, I), [D, O] = xe(null), K = (X) => O(X), le = () => O(null), te = g.find((X) => X.company.id === D) ?? null, Te = Math.max(16, Math.min(126, Math.max(16, z.width - 248 - 12))), ae = te ? ne(
     (P.timelineY + te.y + te.height / 2 - n.y) * re,
     98,
     Math.max(98, z.height - 104)
-  ) : 0, Z = qe(), ie = a.isDefault ? Z.defaultBoardDescription : a.isEmpty ? Z.emptyBoardDetail : a.isComposite ? Z.compositeBoardDescriptionMobile(a.label) : Z.singleBoardDescriptionMobile(a.label), Ae = P.timelineX + H * Ce, Ie = ee + ft;
+  ) : 0, Z = qe(), ie = a.isDefault ? Z.defaultBoardDescription : a.isEmpty ? Z.emptyBoardDetail : a.isComposite ? Z.compositeBoardDescriptionMobile(a.label) : Z.singleBoardDescriptionMobile(a.label), Se = P.timelineX + H * Ce, Ie = ee + ft;
   return /* @__PURE__ */ h("section", { className: "relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden", children: [
     /* @__PURE__ */ i("div", { className: "absolute left-3 top-3 z-40 [--category-expanded-width:min(20rem,calc(100vw-5rem))]", children: v }),
     /* @__PURE__ */ i(
@@ -4250,7 +4250,7 @@ function ss({
                   className: "absolute z-10 overflow-visible",
                   style: {
                     height: `${L}px`,
-                    left: `${Ae}px`,
+                    left: `${Se}px`,
                     top: `${P.timelineY}px`,
                     width: `${Ie}px`
                   },
@@ -4481,11 +4481,11 @@ function ss({
 }
 function hs({ definition: t }) {
   ai(t);
-  const [a, n] = ve(() => Wi()), [r, e] = ve(() => Hi()), [s, l] = ve(
+  const [a, n] = xe(() => Wi()), [r, e] = xe(() => Hi()), [s, l] = xe(
     () => Vi()
-  ), [u, f] = ve(!1), [d, m] = ve(
+  ), [u, f] = xe(!1), [d, m] = xe(
     () => typeof window > "u" ? !0 : window.matchMedia("(min-width: 768px)").matches
-  ), [x, w] = ve(Xt), [b, v] = ve(Yt), [N, R] = ve(!1), [$, q] = ve(!1), [Q, se] = ve(!0), [J, T] = ve([]), [F, Y] = ve(() => Ye().map((o) => o.id)), [A, B] = ve({ x: 0, y: 0 }), [H, ee] = ve({ x: 0, y: 0 }), [z, ce] = ve(() => Oi()), W = j(Xt), re = j(Yt), M = j({ x: 0, y: 0 }), I = j({ x: 0, y: 0 }), L = j({
+  ), [x, w] = xe(Xt), [b, v] = xe(Yt), [N, R] = xe(!1), [$, q] = xe(!1), [Q, se] = xe(!0), [J, T] = xe([]), [F, Y] = xe(() => Ye().map((o) => o.id)), [A, B] = xe({ x: 0, y: 0 }), [H, ee] = xe({ x: 0, y: 0 }), [z, ce] = xe(() => Oi()), W = j(Xt), re = j(Yt), M = j({ x: 0, y: 0 }), I = j({ x: 0, y: 0 }), L = j({
     frameId: null,
     lastFrameAt: null,
     stiffness: lt,
@@ -4503,7 +4503,7 @@ function hs({ definition: t }) {
       zoom: Yt
     },
     zoomAnchor: null
-  }), g = j(null), D = j(null), O = j(null), K = j(null), le = j(null), te = j(null), be = j(null), Te = j(null), ae = j(!1), Z = j(!1), ie = j(null), Ae = j(null), Ie = j(!1), Le = j(null), X = j(() => {
+  }), g = j(null), D = j(null), O = j(null), K = j(null), le = j(null), te = j(null), be = j(null), Te = j(null), ae = j(!1), Z = j(!1), ie = j(null), Se = j(null), Ie = j(!1), Le = j(null), X = j(() => {
   }), fe = j(null), Ke = j(null), pe = j({
     lastX: 0,
     lastY: 0,
@@ -4511,28 +4511,28 @@ function hs({ definition: t }) {
     startY: 0
   });
   j(/* @__PURE__ */ new Map());
-  const Pe = j(null), [k, Ze] = ve({
+  const Pe = j(null), [k, Ze] = xe({
     desktop: { height: 0, width: 0 },
     mobile: { height: 0, width: 0 }
-  }), ot = qe(), xe = z.kind === "model" ? z.slug : null, Ne = xe ? oe().articleIndexBySlug[xe] ?? null : null, Ue = z.kind === "model", Se = (ge(() => /* @__PURE__ */ new Date(), []).getTime() - at().getTime()) / nt, C = ge(() => to(a), [a]), E = ge(
+  }), ot = qe(), he = z.kind === "model" ? z.slug : null, Ne = he ? oe().articleIndexBySlug[he] ?? null : null, Ue = z.kind === "model", ke = (ve(() => /* @__PURE__ */ new Date(), []).getTime() - at().getTime()) / nt, C = ve(() => to(a), [a]), E = ve(
     () => Qt(Ye(), a),
     [a]
-  ), _ = ge(
-    () => co(E, F, J, r, Se),
-    [F, r, Se, J, E]
-  ), S = ge(
+  ), _ = ve(
+    () => co(E, F, J, r, ke),
+    [F, r, ke, J, E]
+  ), S = ve(
     () => uo(_, s, Ne == null ? void 0 : Ne.companyId),
     [Ne == null ? void 0 : Ne.companyId, _, s]
-  ), G = ge(
+  ), G = ve(
     () => S.map((o) => o.id),
     [S]
-  ), _e = ge(() => {
+  ), _e = ve(() => {
     const o = new Set(J);
     return E.filter((c) => o.has(c.id)).length;
-  }, [J, E]), Me = ge(() => ro(Ye(), a), [a]), Xe = ge(() => io(Ye(), a), [a]), Fe = ge(() => oo(Ye(), a), [a]), de = ge(
-    () => po(S, Se),
-    [Se, S]
-  ), Qe = Math.max(Math.ceil(Se) + 36, de.latestGlobalDay + 36, 720), Fa = Math.max(Qe * Ce, 1), xt = Tn(k.desktop.width, mt, Fa), Dt = Tn(k.mobile.width, ft, Fa), $a = bn({
+  }, [J, E]), Me = ve(() => ro(Ye(), a), [a]), Xe = ve(() => io(Ye(), a), [a]), Fe = ve(() => oo(Ye(), a), [a]), de = ve(
+    () => po(S, ke),
+    [ke, S]
+  ), Qe = Math.max(Math.ceil(ke) + 36, de.latestGlobalDay + 36, 720), Fa = Math.max(Qe * Ce, 1), xt = Tn(k.desktop.width, mt, Fa), Dt = Tn(k.mobile.width, ft, Fa), $a = bn({
     camera: A,
     minimumDays: Qe,
     viewport: k.desktop,
@@ -4546,14 +4546,14 @@ function hs({ definition: t }) {
   }), Ct = $a.endDay, St = $a.startDay, kt = Ua.endDay, Rt = Ua.startDay, ea = Math.max(Ot(St, Ct), 1), ta = Math.max(
     Ot(Rt, kt),
     1
-  ), ur = ge(
+  ), ur = ve(
     () => xn({
       camera: A,
       viewport: k.desktop,
       zoom: x
     }),
     [A, k.desktop, x]
-  ), mr = ge(
+  ), mr = ve(
     () => xn({
       camera: H,
       compact: !0,
@@ -4561,7 +4561,7 @@ function hs({ definition: t }) {
       zoom: b
     }),
     [H, b, k.mobile]
-  ), aa = 1, na = 1, At = Wt(de.processedCompanies, !1, aa), It = Wt(de.processedCompanies, !0, na), Xa = ge(
+  ), aa = 1, na = 1, At = Wt(de.processedCompanies, !1, aa), It = Wt(de.processedCompanies, !0, na), Xa = ve(
     () => Bt({
       camera: A,
       futureBufferDays: hn,
@@ -4570,7 +4570,7 @@ function hs({ definition: t }) {
       zoom: x
     }),
     [A, k.desktop, x]
-  ), Ya = ge(
+  ), Ya = ve(
     () => Bt({
       camera: H,
       compact: !0,
@@ -4580,18 +4580,18 @@ function hs({ definition: t }) {
       zoom: b
     }),
     [H, b, k.mobile]
-  ), { monthTicks: fr, yearTicks: pr } = ge(() => vn(Xa), [Xa]), { monthTicks: hr, yearTicks: gr } = ge(
+  ), { monthTicks: fr, yearTicks: pr } = ve(() => vn(Xa), [Xa]), { monthTicks: hr, yearTicks: gr } = ve(
     () => vn(Ya),
     [Ya]
-  ), za = ge(() => [...de.processedCompanies].filter((o) => o.latestRelease).sort((o, c) => {
+  ), za = ve(() => [...de.processedCompanies].filter((o) => o.latestRelease).sort((o, c) => {
     var p, y;
     return (((p = c.latestRelease) == null ? void 0 : p.globalDay) ?? 0) - (((y = o.latestRelease) == null ? void 0 : y.globalDay) ?? 0);
-  })[0] ?? null, [de.processedCompanies]), bt = ge(() => de.processedCompanies, [de.processedCompanies]), Ba = ge(() => bt.reduce((o, c) => {
-    const p = Sa(c, Se);
+  })[0] ?? null, [de.processedCompanies]), bt = ve(() => de.processedCompanies, [de.processedCompanies]), Ba = ve(() => bt.reduce((o, c) => {
+    const p = Sa(c, ke);
     return Math.max(o, p);
-  }, 0), [Se, bt]), Je = ge(
+  }, 0), [ke, bt]), Je = ve(
     () => Ht({
-      currentGlobalDay: Se,
+      currentGlobalDay: ke,
       maxDays: Ct,
       summaryCount: bt.length,
       timelineStartDay: St,
@@ -4600,7 +4600,7 @@ function hs({ definition: t }) {
       viewport: k.desktop
     }),
     [
-      Se,
+      ke,
       At,
       Ct,
       bt.length,
@@ -4608,10 +4608,10 @@ function hs({ definition: t }) {
       ea,
       k.desktop
     ]
-  ), et = ge(
+  ), et = ve(
     () => Ht({
       compact: !0,
-      currentGlobalDay: Se,
+      currentGlobalDay: ke,
       maxDays: kt,
       summaryCount: de.processedCompanies.length,
       timelineStartDay: Rt,
@@ -4620,7 +4620,7 @@ function hs({ definition: t }) {
       viewport: k.mobile
     }),
     [
-      Se,
+      ke,
       kt,
       Rt,
       It,
@@ -4768,7 +4768,7 @@ function hs({ definition: t }) {
       significanceDisplayLimit: s
     });
   }, ra = () => {
-    z.kind === "model" && (Ae.current = null, Ga());
+    z.kind === "model" && (Se.current = null, Ga());
   }, ja = (o, c) => {
     if (Ie.current) {
       Ie.current = !1;
@@ -4776,7 +4776,7 @@ function hs({ definition: t }) {
     }
     ga(
       o,
-      xe,
+      he,
       ra,
       c
     );
@@ -4809,7 +4809,7 @@ function hs({ definition: t }) {
   }, Ka = (o) => {
     const c = L.current, p = c.lastFrameAt === null ? 1 / 60 : ne((o - c.lastFrameAt) / 1e3, 0, 0.064);
     c.lastFrameAt = o;
-    const { target: y, zoomAnchor: U } = c, V = 1 - Math.exp(-c.stiffness * p), ue = dt(W.current, y.zoom, V), he = U ? ct(
+    const { target: y, zoomAnchor: U } = c, V = 1 - Math.exp(-c.stiffness * p), ue = dt(W.current, y.zoom, V), ge = U ? ct(
       U.worldX,
       U.worldY,
       U.viewportX,
@@ -4819,8 +4819,8 @@ function hs({ definition: t }) {
       x: dt(M.current.x, y.camera.x, V),
       y: dt(M.current.y, y.camera.y, V)
     };
-    ia(ue, he);
-    const ye = Math.hypot(y.camera.x - he.x, y.camera.y - he.y), we = Math.abs(y.zoom - ue);
+    ia(ue, ge);
+    const ye = Math.hypot(y.camera.x - ge.x, y.camera.y - ge.y), we = Math.abs(y.zoom - ue);
     if (ye > un || we > mn) {
       c.frameId = window.requestAnimationFrame(Ka);
       return;
@@ -4837,7 +4837,7 @@ function hs({ definition: t }) {
   }, Za = (o) => {
     const c = P.current, p = c.lastFrameAt === null ? 1 / 60 : ne((o - c.lastFrameAt) / 1e3, 0, 0.064);
     c.lastFrameAt = o;
-    const { target: y, zoomAnchor: U } = c, V = 1 - Math.exp(-c.stiffness * p), ue = dt(re.current, y.zoom, V), he = U ? ct(
+    const { target: y, zoomAnchor: U } = c, V = 1 - Math.exp(-c.stiffness * p), ue = dt(re.current, y.zoom, V), ge = U ? ct(
       U.worldX,
       U.worldY,
       U.viewportX,
@@ -4847,8 +4847,8 @@ function hs({ definition: t }) {
       x: dt(I.current.x, y.camera.x, V),
       y: dt(I.current.y, y.camera.y, V)
     };
-    oa(ue, he);
-    const ye = Math.hypot(y.camera.x - he.x, y.camera.y - he.y), we = Math.abs(y.zoom - ue);
+    oa(ue, ge);
+    const ye = Math.hypot(y.camera.x - ge.x, y.camera.y - ge.y), we = Math.abs(y.zoom - ue);
     if (ye > un || we > mn) {
       c.frameId = window.requestAnimationFrame(Za);
       return;
@@ -4883,8 +4883,8 @@ function hs({ definition: t }) {
       );
       if (!V)
         return;
-      const ue = So(p, c, Ue), he = Ue && !c ? ko(p, ue) : Gn, ye = Ro({
-        anchor: he,
+      const ue = So(p, c, Ue), ge = Ue && !c ? ko(p, ue) : Gn, ye = Ro({
+        anchor: ge,
         bounds: V,
         focusMaxZoom: c ? Yi : Xi,
         insets: ue,
@@ -4917,13 +4917,17 @@ function hs({ definition: t }) {
     ]
   );
   De(() => {
-    if (!Ue || !xe) {
-      Ue || (Ae.current = null);
+    if (!Ue || !he) {
+      Ue || (Se.current = null);
       return;
     }
-    !$ || N || ie.current !== null || (d ? k.desktop : k.mobile).width <= 0 || Ae.current !== xe && _a(de.processedCompanies, xe) && (Mr({ kind: "slug", slug: xe }), Ae.current = xe);
+    if (!d) {
+      Se.current = he;
+      return;
+    }
+    !$ || N || ie.current !== null || (d ? k.desktop : k.mobile).width <= 0 || Se.current !== he && _a(de.processedCompanies, he) && (Mr({ kind: "slug", slug: he }), Se.current = he);
   }, [
-    xe,
+    he,
     Ue,
     d,
     N,
@@ -4939,32 +4943,32 @@ function hs({ definition: t }) {
       const y = !d, U = y ? k.mobile : k.desktop;
       if (U.width <= 0 || U.height <= 0)
         return;
-      const V = y ? et : Je, ue = y ? na : aa, he = Eo(
+      const V = y ? et : Je, ue = y ? na : aa, ge = Eo(
         de.processedCompanies,
         V,
         y,
         ue
       );
-      if (he.length === 0)
+      if (ge.length === 0)
         return;
       const ye = y ? I.current : M.current, we = y ? re.current : W.current, Ee = No(
         de.processedCompanies,
         V,
         y,
         ue,
-        xe,
+        he,
         ye,
         we,
         U
-      ), wt = Mo(Ee, he, p, {
-        excludeSlug: xe,
-        minPrimaryDistance: xe ? tr : 0
+      ), wt = Mo(Ee, ge, p, {
+        excludeSlug: he,
+        minPrimaryDistance: he ? tr : 0
       });
-      !wt || wt.slug === xe || (c.preventDefault(), Ae.current = null, Lt(wt.slug));
+      !wt || wt.slug === he || (c.preventDefault(), Se.current = null, Lt(wt.slug));
     };
     return window.addEventListener("keydown", o), () => window.removeEventListener("keydown", o);
   }, [
-    xe,
+    he,
     Je,
     d,
     $,
@@ -5002,15 +5006,15 @@ function hs({ definition: t }) {
       (c == null ? void 0 : c.y) ?? te.current ?? ((p == null ? void 0 : p.clientHeight) ?? y.height) / 2,
       0,
       (p == null ? void 0 : p.clientHeight) ?? y.height
-    ), ue = L.current, he = W.current, ye = Number(ne(o(he), xt, Pt).toFixed(3));
-    if (ye === he)
+    ), ue = L.current, ge = W.current, ye = Number(ne(o(ge), xt, Pt).toFixed(3));
+    if (ye === ge)
       return;
     const we = wn({
       anchorX: U,
       anchorY: V,
       camera: M.current,
       existingAnchor: ue.zoomAnchor,
-      zoom: he
+      zoom: ge
     }), Ee = ct(
       we.worldX,
       we.worldY,
@@ -5034,15 +5038,15 @@ function hs({ definition: t }) {
       (c == null ? void 0 : c.y) ?? Te.current ?? ((p == null ? void 0 : p.clientHeight) ?? y.height) / 2,
       0,
       (p == null ? void 0 : p.clientHeight) ?? y.height
-    ), ue = P.current, he = re.current, ye = Number(ne(o(he), Dt, ua).toFixed(3));
-    if (ye === he)
+    ), ue = P.current, ge = re.current, ye = Number(ne(o(ge), Dt, ua).toFixed(3));
+    if (ye === ge)
       return;
     const we = wn({
       anchorX: U,
       anchorY: V,
       camera: I.current,
       existingAnchor: ue.zoomAnchor,
-      zoom: he
+      zoom: ge
     }), Ee = ct(
       we.worldX,
       we.worldY,
@@ -5140,7 +5144,7 @@ function hs({ definition: t }) {
       o.clientY - pe.current.startY
     ) > gn ? Ie.current = !0 : ga(
       o.target,
-      xe,
+      he,
       ra,
       { clientX: o.clientX, clientY: o.clientY }
     ), B(M.current), R(!1);
@@ -5218,8 +5222,8 @@ function hs({ definition: t }) {
       yt(o.touches);
       return;
     }
-    const he = V.clientX - p.lastMidpointX, ye = V.clientY - p.lastMidpointY;
-    rn(he, ye);
+    const ge = V.clientX - p.lastMidpointX, ye = V.clientY - p.lastMidpointY;
+    rn(ge, ye);
     const we = ne(ue / Math.max(p.distance, 1), 0.78, 1.28);
     Ja((Ee) => Ee * we, {
       x: be.current ?? c.clientWidth / 2,
@@ -5232,7 +5236,7 @@ function hs({ definition: t }) {
     const p = o.changedTouches[0];
     Math.hypot(p.clientX - c.startX, p.clientY - c.startY) > gn || ga(
       p.target,
-      xe,
+      he,
       ra,
       { clientX: p.clientX, clientY: p.clientY }
     );
@@ -5255,10 +5259,10 @@ function hs({ definition: t }) {
       d ? null : /* @__PURE__ */ i("div", { className: "md:hidden", children: /* @__PURE__ */ i(
         ss,
         {
-          activeArticleSlug: xe,
+          activeArticleSlug: he,
           boardView: C,
           camera: H,
-          currentGlobalDay: Se,
+          currentGlobalDay: ke,
           handleTouchEnd: _r,
           handleTouchMove: Pr,
           handleTouchStart: Lr,
@@ -5293,10 +5297,10 @@ function hs({ definition: t }) {
       d ? /* @__PURE__ */ i("div", { className: "hidden md:block", children: /* @__PURE__ */ i(
         os,
         {
-          activeArticleSlug: xe,
+          activeArticleSlug: he,
           boardView: C,
           camera: A,
-          currentGlobalDay: Se,
+          currentGlobalDay: ke,
           handlePointerDown: Rr,
           handlePointerMove: Ar,
           handleZoomChange: Qa,
@@ -5337,7 +5341,7 @@ function hs({ definition: t }) {
         entry: Ne,
         onBack: Ga,
         onNavigate: Lt,
-        requestedSlug: xe ?? ""
+        requestedSlug: he ?? ""
       }
     ) : null })
   ] }) : /* @__PURE__ */ i(is, {});
@@ -5347,9 +5351,9 @@ export {
   hs as TimelineExperience,
   ps as buildTimelineArticleIndex,
   ti as createTimelineItemSlug,
-  ke as formatTimelineDate,
+  Re as formatTimelineDate,
   _n as formatTimelineDateRange,
   Fn as getTimelineItemSlug,
   fs as indexTimelineArticles,
-  Re as parseTimelineDate
+  Ae as parseTimelineDate
 };

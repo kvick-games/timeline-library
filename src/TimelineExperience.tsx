@@ -7801,6 +7801,11 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       return;
     }
 
+    if (!isDesktopViewport) {
+      lastFocusedArticleSlugRef.current = activeArticleSlug;
+      return;
+    }
+
     if (!isReady || isPanning || activePointerIdRef.current !== null) {
       return;
     }
