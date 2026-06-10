@@ -3950,12 +3950,16 @@ const FRACTAL_RENDER_WIDTH = 640;
 const FRACTAL_RENDER_HEIGHT = 448;
 const FRACTAL_MAX_ITERATIONS = 96;
 const FRACTAL_BAILOUT_RADIUS_SQUARED = 4096;
-// The backdrop materializes through progressively finer resolutions; each
-// stage dissolves over the last so it sharpens like a mirage instead of
-// printing in scan lines. Small per-frame budgets keep frames cheap.
-const FRACTAL_STAGE_SCALES = [8, 4, 2, 1];
+// The backdrop materializes in three movements: a soft eighth-resolution
+// mirage fades up immediately, the full image computes invisibly beneath it
+// in small per-frame budgets, then the detail sweeps in along the fractal's
+// own equipotential bands — the reveal front crawls along the spiral arms
+// toward the set (which lights up last) while the mirage dissolves under it.
+const FRACTAL_BASE_SCALE = 8;
 const FRACTAL_PIXELS_PER_FRAME = 5200;
-const FRACTAL_FADE_FRAMES = 16;
+const FRACTAL_BASE_FADE_FRAMES = 16;
+const FRACTAL_REVEAL_FRAMES = 190;
+const FRACTAL_REVEAL_FEATHER = 0.07;
 
 function hashFractalSeed(value: string) {
   let hash = 0x811c9dc5;
@@ -4135,128 +4139,175 @@ function ArticleFractalBackdrop({accent, seedKey}: {accent: string; seedKey: str
       return paletteStops[paletteStops.length - 1].rgb;
     };
 
-    context.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+    const width = FRACTAL_RENDER_WIDTH;
+    const height = FRACTAL_RENDER_HEIGHT;
+    const pixelCount = width * height;
+
+    context.clearRect(0, 0, width, height);
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
 
     const rotationCos = Math.cos(params.rotation);
     const rotationSin = Math.sin(params.rotation);
-    const aspect = FRACTAL_RENDER_WIDTH / FRACTAL_RENDER_HEIGHT;
+    const aspect = width / height;
     const interiorRgb = mixChannels(deepRgb, accentRgb, 0.28);
+    const emberRgb = mixChannels(accentRgb, [240, 244, 250], 0.7);
 
-    const shadePixel = (pixels: Uint8ClampedArray, offset: number, smoothIterations: number) => {
+    // shaped ∈ [0, 1] is the log-scaled escape value used for both color and
+    // reveal order; the interior (never escapes) maps to 1 so it arrives last.
+    const shapeIterations = (smoothIterations: number) => {
       if (smoothIterations < 0) {
-        pixels[offset] = interiorRgb[0];
-        pixels[offset + 1] = interiorRgb[1];
-        pixels[offset + 2] = interiorRgb[2];
-        pixels[offset + 3] = 150;
-        return;
+        return 1;
       }
-      // Log scaling spreads the low escape counts (most pixels) across the
-      // palette; linear scaling leaves all but the filaments near-black.
       const normalized = Math.min(
         1,
         Math.max(0, Math.log(1 + smoothIterations) / Math.log(1 + FRACTAL_MAX_ITERATIONS)),
       );
-      const shaped = Math.pow(normalized, 1.1);
-      const rgb = samplePalette(shaped);
-      pixels[offset] = rgb[0];
-      pixels[offset + 1] = rgb[1];
-      pixels[offset + 2] = rgb[2];
-      pixels[offset + 3] = Math.round(30 + shaped * 225);
+      return Math.pow(normalized, 1.1);
     };
 
-    const stageCanvas = document.createElement('canvas');
-    const stageContext = stageCanvas.getContext('2d');
-    const settledCanvas = document.createElement('canvas');
-    settledCanvas.width = FRACTAL_RENDER_WIDTH;
-    settledCanvas.height = FRACTAL_RENDER_HEIGHT;
-    const settledContext = settledCanvas.getContext('2d');
-    if (!stageContext || !settledContext) {
+    const sampleShaped = (x: number, y: number, gridWidth: number, gridHeight: number) => {
+      const v = (((y + 0.5) / gridHeight) * 2 - 1) / params.zoom;
+      const u = ((((x + 0.5) / gridWidth) * 2 - 1) * aspect) / params.zoom;
+      const startRe = u * rotationCos - v * rotationSin + params.centerX;
+      const startIm = u * rotationSin + v * rotationCos + params.centerY;
+      const smoothIterations = iterateFractalPixel(params, startRe, startIm);
+      return {
+        interior: smoothIterations < 0,
+        shaped: shapeIterations(smoothIterations),
+      };
+    };
+
+    const baseWidth = Math.ceil(width / FRACTAL_BASE_SCALE);
+    const baseHeight = Math.ceil(height / FRACTAL_BASE_SCALE);
+    const baseCanvas = document.createElement('canvas');
+    baseCanvas.width = baseWidth;
+    baseCanvas.height = baseHeight;
+    const baseContext = baseCanvas.getContext('2d');
+    const revealCanvas = document.createElement('canvas');
+    revealCanvas.width = width;
+    revealCanvas.height = height;
+    const revealContext = revealCanvas.getContext('2d');
+    if (!baseContext || !revealContext) {
       return undefined;
     }
-    settledContext.imageSmoothingEnabled = true;
-    settledContext.imageSmoothingQuality = 'high';
+
+    const baseImage = baseContext.createImageData(baseWidth, baseHeight);
+    const revealImage = revealContext.createImageData(width, height);
+    const fullRgb = new Uint8ClampedArray(pixelCount * 3);
+    const fullAlpha = new Uint8ClampedArray(pixelCount);
+    const fullShaped = new Float32Array(pixelCount);
+
+    const easeInOutCubic = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
     let cancelled = false;
     let frameHandle = 0;
-    let stageIndex = 0;
-    let stageWidth = 0;
-    let stageHeight = 0;
-    let stageImage: ImageData | null = null;
-    let nextRow = 0;
+    let phase: 'base' | 'baseFade' | 'full' | 'reveal' = 'base';
+    let baseRow = 0;
     let fadeFrame = 0;
-
-    const beginStage = () => {
-      const scale = FRACTAL_STAGE_SCALES[stageIndex];
-      stageWidth = Math.ceil(FRACTAL_RENDER_WIDTH / scale);
-      stageHeight = Math.ceil(FRACTAL_RENDER_HEIGHT / scale);
-      stageCanvas.width = stageWidth;
-      stageCanvas.height = stageHeight;
-      stageImage = stageContext.createImageData(stageWidth, stageHeight);
-      nextRow = 0;
-      fadeFrame = 0;
-    };
+    let fullRow = 0;
+    let revealFrame = 0;
 
     const step = () => {
       if (cancelled) {
         return;
       }
 
-      if (stageImage && nextRow < stageHeight) {
-        // Compute a small, fixed pixel budget per frame so the main thread
-        // never stalls; coarse stages finish in a frame or two.
-        const rowBudget = Math.max(1, Math.floor(FRACTAL_PIXELS_PER_FRAME / stageWidth));
-        const rowLimit = Math.min(nextRow + rowBudget, stageHeight);
-        const pixels = stageImage.data;
-
-        for (let y = nextRow; y < rowLimit; y += 1) {
-          const v = (((y + 0.5) / stageHeight) * 2 - 1) / params.zoom;
-          for (let x = 0; x < stageWidth; x += 1) {
-            const u = ((((x + 0.5) / stageWidth) * 2 - 1) * aspect) / params.zoom;
-            const startRe = u * rotationCos - v * rotationSin + params.centerX;
-            const startIm = u * rotationSin + v * rotationCos + params.centerY;
-            shadePixel(pixels, (y * stageWidth + x) * 4, iterateFractalPixel(params, startRe, startIm));
+      if (phase === 'base') {
+        const rowBudget = Math.max(1, Math.floor(FRACTAL_PIXELS_PER_FRAME / baseWidth));
+        const rowLimit = Math.min(baseRow + rowBudget, baseHeight);
+        for (let y = baseRow; y < rowLimit; y += 1) {
+          for (let x = 0; x < baseWidth; x += 1) {
+            const sample = sampleShaped(x, y, baseWidth, baseHeight);
+            const offset = (y * baseWidth + x) * 4;
+            const rgb = sample.interior ? interiorRgb : samplePalette(sample.shaped);
+            baseImage.data[offset] = rgb[0];
+            baseImage.data[offset + 1] = rgb[1];
+            baseImage.data[offset + 2] = rgb[2];
+            baseImage.data[offset + 3] = sample.interior ? 150 : Math.round(30 + sample.shaped * 225);
           }
         }
-
-        nextRow = rowLimit;
-        if (nextRow >= stageHeight) {
-          stageContext.putImageData(stageImage, 0, 0);
+        baseRow = rowLimit;
+        if (baseRow >= baseHeight) {
+          baseContext.putImageData(baseImage, 0, 0);
+          phase = 'baseFade';
         }
         frameHandle = window.requestAnimationFrame(step);
         return;
       }
 
-      if (fadeFrame < FRACTAL_FADE_FRAMES) {
-        // Dissolve the finished stage over the previous, blurrier one. The
-        // visible canvas is rebuilt from scratch each fade frame so per-pixel
-        // alpha never accumulates across repeated composites.
+      if (phase === 'baseFade') {
         fadeFrame += 1;
-        context.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
-        context.drawImage(settledCanvas, 0, 0);
-        context.globalAlpha = fadeFrame / FRACTAL_FADE_FRAMES;
-        context.drawImage(stageCanvas, 0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+        context.clearRect(0, 0, width, height);
+        context.globalAlpha = fadeFrame / FRACTAL_BASE_FADE_FRAMES;
+        context.drawImage(baseCanvas, 0, 0, width, height);
         context.globalAlpha = 1;
-        if (fadeFrame >= FRACTAL_FADE_FRAMES) {
-          // The stage has fully dissolved in; settle it as the new base layer.
-          settledContext.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
-          settledContext.drawImage(stageCanvas, 0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
-          context.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
-          context.drawImage(settledCanvas, 0, 0);
+        if (fadeFrame >= FRACTAL_BASE_FADE_FRAMES) {
+          phase = 'full';
         }
         frameHandle = window.requestAnimationFrame(step);
         return;
       }
 
-      stageIndex += 1;
-      if (stageIndex < FRACTAL_STAGE_SCALES.length) {
-        beginStage();
+      if (phase === 'full') {
+        // Compute the full-resolution field invisibly while the mirage holds.
+        const rowBudget = Math.max(1, Math.floor(FRACTAL_PIXELS_PER_FRAME / width));
+        const rowLimit = Math.min(fullRow + rowBudget, height);
+        for (let y = fullRow; y < rowLimit; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            const sample = sampleShaped(x, y, width, height);
+            const index = y * width + x;
+            const rgb = sample.interior ? interiorRgb : samplePalette(sample.shaped);
+            fullRgb[index * 3] = rgb[0];
+            fullRgb[index * 3 + 1] = rgb[1];
+            fullRgb[index * 3 + 2] = rgb[2];
+            fullAlpha[index] = sample.interior ? 150 : Math.round(30 + sample.shaped * 225);
+            fullShaped[index] = sample.shaped;
+          }
+        }
+        fullRow = rowLimit;
+        if (fullRow >= height) {
+          phase = 'reveal';
+        }
+        frameHandle = window.requestAnimationFrame(step);
+        return;
+      }
+
+      revealFrame += 1;
+      const progress = Math.min(1, revealFrame / FRACTAL_REVEAL_FRAMES);
+      // Push the front past 1 + feather so every pixel fully saturates.
+      const front = easeInOutCubic(progress) * (1 + FRACTAL_REVEAL_FEATHER * 2);
+      const pixels = revealImage.data;
+
+      for (let index = 0; index < pixelCount; index += 1) {
+        const arrival = (front - fullShaped[index]) / FRACTAL_REVEAL_FEATHER;
+        const visibility = arrival <= 0 ? 0 : arrival >= 1 ? 1 : arrival;
+        // The leading edge of the front glows like an ember as it travels
+        // along the equipotential bands that wrap the spiral arms.
+        const ember = visibility * (1 - visibility) * 2;
+        const offset = index * 4;
+        pixels[offset] = fullRgb[index * 3] + (emberRgb[0] - fullRgb[index * 3]) * ember;
+        pixels[offset + 1] = fullRgb[index * 3 + 1] + (emberRgb[1] - fullRgb[index * 3 + 1]) * ember;
+        pixels[offset + 2] = fullRgb[index * 3 + 2] + (emberRgb[2] - fullRgb[index * 3 + 2]) * ember;
+        pixels[offset + 3] = fullAlpha[index] * visibility + ember * 70;
+      }
+
+      revealContext.putImageData(revealImage, 0, 0);
+      context.clearRect(0, 0, width, height);
+      const baseOpacity = 1 - easeInOutCubic(progress);
+      if (baseOpacity > 0.003) {
+        context.globalAlpha = baseOpacity;
+        context.drawImage(baseCanvas, 0, 0, width, height);
+        context.globalAlpha = 1;
+      }
+      context.drawImage(revealCanvas, 0, 0);
+
+      if (revealFrame < FRACTAL_REVEAL_FRAMES) {
         frameHandle = window.requestAnimationFrame(step);
       }
     };
 
-    beginStage();
     frameHandle = window.requestAnimationFrame(step);
     return () => {
       cancelled = true;
