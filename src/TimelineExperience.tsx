@@ -3950,7 +3950,12 @@ const FRACTAL_RENDER_WIDTH = 640;
 const FRACTAL_RENDER_HEIGHT = 448;
 const FRACTAL_MAX_ITERATIONS = 96;
 const FRACTAL_BAILOUT_RADIUS_SQUARED = 4096;
-const FRACTAL_ROWS_PER_FRAME = 34;
+// The backdrop materializes through progressively finer resolutions; each
+// stage dissolves over the last so it sharpens like a mirage instead of
+// printing in scan lines. Small per-frame budgets keep frames cheap.
+const FRACTAL_STAGE_SCALES = [8, 4, 2, 1];
+const FRACTAL_PIXELS_PER_FRAME = 5200;
+const FRACTAL_FADE_FRAMES = 16;
 
 function hashFractalSeed(value: string) {
   let hash = 0x811c9dc5;
@@ -4131,59 +4136,132 @@ function ArticleFractalBackdrop({accent, seedKey}: {accent: string; seedKey: str
     };
 
     context.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
 
     const rotationCos = Math.cos(params.rotation);
     const rotationSin = Math.sin(params.rotation);
     const aspect = FRACTAL_RENDER_WIDTH / FRACTAL_RENDER_HEIGHT;
     const interiorRgb = mixChannels(deepRgb, accentRgb, 0.28);
-    let nextRow = 0;
+
+    const shadePixel = (pixels: Uint8ClampedArray, offset: number, smoothIterations: number) => {
+      if (smoothIterations < 0) {
+        pixels[offset] = interiorRgb[0];
+        pixels[offset + 1] = interiorRgb[1];
+        pixels[offset + 2] = interiorRgb[2];
+        pixels[offset + 3] = 150;
+        return;
+      }
+      // Log scaling spreads the low escape counts (most pixels) across the
+      // palette; linear scaling leaves all but the filaments near-black.
+      const normalized = Math.min(
+        1,
+        Math.max(0, Math.log(1 + smoothIterations) / Math.log(1 + FRACTAL_MAX_ITERATIONS)),
+      );
+      const shaped = Math.pow(normalized, 1.1);
+      const rgb = samplePalette(shaped);
+      pixels[offset] = rgb[0];
+      pixels[offset + 1] = rgb[1];
+      pixels[offset + 2] = rgb[2];
+      pixels[offset + 3] = Math.round(30 + shaped * 225);
+    };
+
+    const stageCanvas = document.createElement('canvas');
+    const stageContext = stageCanvas.getContext('2d');
+    const settledCanvas = document.createElement('canvas');
+    settledCanvas.width = FRACTAL_RENDER_WIDTH;
+    settledCanvas.height = FRACTAL_RENDER_HEIGHT;
+    const settledContext = settledCanvas.getContext('2d');
+    if (!stageContext || !settledContext) {
+      return undefined;
+    }
+    settledContext.imageSmoothingEnabled = true;
+    settledContext.imageSmoothingQuality = 'high';
+
+    let cancelled = false;
     let frameHandle = 0;
+    let stageIndex = 0;
+    let stageWidth = 0;
+    let stageHeight = 0;
+    let stageImage: ImageData | null = null;
+    let nextRow = 0;
+    let fadeFrame = 0;
 
-    const renderChunk = () => {
-      const rowLimit = Math.min(nextRow + FRACTAL_ROWS_PER_FRAME, FRACTAL_RENDER_HEIGHT);
-      const chunk = context.createImageData(FRACTAL_RENDER_WIDTH, rowLimit - nextRow);
-      const pixels = chunk.data;
+    const beginStage = () => {
+      const scale = FRACTAL_STAGE_SCALES[stageIndex];
+      stageWidth = Math.ceil(FRACTAL_RENDER_WIDTH / scale);
+      stageHeight = Math.ceil(FRACTAL_RENDER_HEIGHT / scale);
+      stageCanvas.width = stageWidth;
+      stageCanvas.height = stageHeight;
+      stageImage = stageContext.createImageData(stageWidth, stageHeight);
+      nextRow = 0;
+      fadeFrame = 0;
+    };
 
-      for (let y = nextRow; y < rowLimit; y += 1) {
-        const v = ((y / FRACTAL_RENDER_HEIGHT) * 2 - 1) / params.zoom;
-        for (let x = 0; x < FRACTAL_RENDER_WIDTH; x += 1) {
-          const u = (((x / FRACTAL_RENDER_WIDTH) * 2 - 1) * aspect) / params.zoom;
-          const startRe = u * rotationCos - v * rotationSin + params.centerX;
-          const startIm = u * rotationSin + v * rotationCos + params.centerY;
-          const smoothIterations = iterateFractalPixel(params, startRe, startIm);
-
-          const offset = ((y - nextRow) * FRACTAL_RENDER_WIDTH + x) * 4;
-          if (smoothIterations < 0) {
-            pixels[offset] = interiorRgb[0];
-            pixels[offset + 1] = interiorRgb[1];
-            pixels[offset + 2] = interiorRgb[2];
-            pixels[offset + 3] = 150;
-          } else {
-            // Log scaling spreads the low escape counts (most pixels) across the
-            // palette; linear scaling leaves all but the filaments near-black.
-            const normalized = Math.min(
-              1,
-              Math.max(0, Math.log(1 + smoothIterations) / Math.log(1 + FRACTAL_MAX_ITERATIONS)),
-            );
-            const shaped = Math.pow(normalized, 1.1);
-            const rgb = samplePalette(shaped);
-            pixels[offset] = rgb[0];
-            pixels[offset + 1] = rgb[1];
-            pixels[offset + 2] = rgb[2];
-            pixels[offset + 3] = Math.round(30 + shaped * 225);
-          }
-        }
+    const step = () => {
+      if (cancelled) {
+        return;
       }
 
-      context.putImageData(chunk, 0, nextRow);
-      nextRow = rowLimit;
-      if (nextRow < FRACTAL_RENDER_HEIGHT) {
-        frameHandle = window.requestAnimationFrame(renderChunk);
+      if (stageImage && nextRow < stageHeight) {
+        // Compute a small, fixed pixel budget per frame so the main thread
+        // never stalls; coarse stages finish in a frame or two.
+        const rowBudget = Math.max(1, Math.floor(FRACTAL_PIXELS_PER_FRAME / stageWidth));
+        const rowLimit = Math.min(nextRow + rowBudget, stageHeight);
+        const pixels = stageImage.data;
+
+        for (let y = nextRow; y < rowLimit; y += 1) {
+          const v = (((y + 0.5) / stageHeight) * 2 - 1) / params.zoom;
+          for (let x = 0; x < stageWidth; x += 1) {
+            const u = ((((x + 0.5) / stageWidth) * 2 - 1) * aspect) / params.zoom;
+            const startRe = u * rotationCos - v * rotationSin + params.centerX;
+            const startIm = u * rotationSin + v * rotationCos + params.centerY;
+            shadePixel(pixels, (y * stageWidth + x) * 4, iterateFractalPixel(params, startRe, startIm));
+          }
+        }
+
+        nextRow = rowLimit;
+        if (nextRow >= stageHeight) {
+          stageContext.putImageData(stageImage, 0, 0);
+        }
+        frameHandle = window.requestAnimationFrame(step);
+        return;
+      }
+
+      if (fadeFrame < FRACTAL_FADE_FRAMES) {
+        // Dissolve the finished stage over the previous, blurrier one. The
+        // visible canvas is rebuilt from scratch each fade frame so per-pixel
+        // alpha never accumulates across repeated composites.
+        fadeFrame += 1;
+        context.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+        context.drawImage(settledCanvas, 0, 0);
+        context.globalAlpha = fadeFrame / FRACTAL_FADE_FRAMES;
+        context.drawImage(stageCanvas, 0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+        context.globalAlpha = 1;
+        if (fadeFrame >= FRACTAL_FADE_FRAMES) {
+          // The stage has fully dissolved in; settle it as the new base layer.
+          settledContext.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+          settledContext.drawImage(stageCanvas, 0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+          context.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+          context.drawImage(settledCanvas, 0, 0);
+        }
+        frameHandle = window.requestAnimationFrame(step);
+        return;
+      }
+
+      stageIndex += 1;
+      if (stageIndex < FRACTAL_STAGE_SCALES.length) {
+        beginStage();
+        frameHandle = window.requestAnimationFrame(step);
       }
     };
 
-    frameHandle = window.requestAnimationFrame(renderChunk);
-    return () => window.cancelAnimationFrame(frameHandle);
+    beginStage();
+    frameHandle = window.requestAnimationFrame(step);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frameHandle);
+    };
   }, [accent, seedKey]);
 
   return (
