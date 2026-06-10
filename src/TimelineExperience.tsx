@@ -3946,6 +3946,261 @@ function ArticleMediaFigure({media}: {media: ArticleMedia}) {
   );
 }
 
+const FRACTAL_RENDER_WIDTH = 640;
+const FRACTAL_RENDER_HEIGHT = 448;
+const FRACTAL_MAX_ITERATIONS = 96;
+const FRACTAL_BAILOUT_RADIUS_SQUARED = 4096;
+const FRACTAL_ROWS_PER_FRAME = 34;
+
+function hashFractalSeed(value: string) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+function createSeededRandom(seed: number) {
+  let state = seed || 1;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let next = Math.imul(state ^ (state >>> 15), 1 | state);
+    next = (next + Math.imul(next ^ (next >>> 7), 61 | next)) ^ next;
+    return ((next ^ (next >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function parseAccentRgb(accent: string): [number, number, number] {
+  const normalized = accent.replace('#', '');
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((channel) => channel + channel)
+          .join('')
+      : normalized;
+  const value = Number.parseInt(expanded, 16);
+  if (!Number.isFinite(value) || expanded.length !== 6) {
+    return [125, 145, 175];
+  }
+  return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
+}
+
+function mixChannels(from: [number, number, number], to: [number, number, number], amount: number): [number, number, number] {
+  return [
+    from[0] + (to[0] - from[0]) * amount,
+    from[1] + (to[1] - from[1]) * amount,
+    from[2] + (to[2] - from[2]) * amount,
+  ];
+}
+
+type FractalParams = {
+  variant: number;
+  cRe: number;
+  cIm: number;
+  phoenixRe: number;
+  zoom: number;
+  rotation: number;
+  centerX: number;
+  centerY: number;
+};
+
+// Julia constants are sampled near the boundary of each variant's connectedness
+// locus; arbitrary constants frequently collapse into a featureless wash.
+const TRICORN_JULIA_ANCHORS: Array<[number, number]> = [
+  [-0.295, 0.62],
+  [0.31, 0.42],
+  [-1.04, 0.25],
+  [-0.78, 0.18],
+];
+
+const PHOENIX_JULIA_ANCHORS: Array<[number, number]> = [
+  [0.5667, -0.5],
+  [0.5, -0.55],
+  [0.6, -0.45],
+];
+
+function createFractalParams(seedKey: string): FractalParams {
+  const random = createSeededRandom(hashFractalSeed(seedKey));
+  const variant = Math.floor(random() * 4);
+  const ringAngle = random() * Math.PI * 2;
+  const ringRadius = 0.768 + random() * 0.034;
+
+  let cRe = Math.cos(ringAngle) * ringRadius;
+  let cIm = Math.sin(ringAngle) * ringRadius;
+  let phoenixRe = 0;
+
+  if (variant === 2) {
+    const anchor = TRICORN_JULIA_ANCHORS[Math.floor(random() * TRICORN_JULIA_ANCHORS.length)];
+    cRe = anchor[0] + (random() - 0.5) * 0.05;
+    cIm = anchor[1] + (random() - 0.5) * 0.05;
+  } else if (variant === 3) {
+    const anchor = PHOENIX_JULIA_ANCHORS[Math.floor(random() * PHOENIX_JULIA_ANCHORS.length)];
+    cRe = anchor[0] + (random() - 0.5) * 0.03;
+    phoenixRe = anchor[1] + (random() - 0.5) * 0.03;
+    cIm = 0;
+  }
+
+  return {
+    variant,
+    cRe,
+    cIm,
+    phoenixRe,
+    zoom: 0.52 + random() * 0.33,
+    rotation: random() * Math.PI * 2,
+    centerX: (random() - 0.5) * 0.3,
+    centerY: (random() - 0.5) * 0.3,
+  };
+}
+
+function iterateFractalPixel(params: FractalParams, startRe: number, startIm: number) {
+  let zRe = startRe;
+  let zIm = startIm;
+  let zPrevRe = 0;
+  let zPrevIm = 0;
+
+  for (let iteration = 0; iteration < FRACTAL_MAX_ITERATIONS; iteration += 1) {
+    const magnitudeSquared = zRe * zRe + zIm * zIm;
+    if (magnitudeSquared > FRACTAL_BAILOUT_RADIUS_SQUARED) {
+      // Smooth (renormalized) iteration count keeps the banding out of the glow.
+      return iteration + 1 - Math.log(Math.log(magnitudeSquared) * 0.5) / Math.LN2;
+    }
+
+    let nextRe: number;
+    let nextIm: number;
+
+    if (params.variant === 1) {
+      // "Mirage" fold: mirror the real axis before squaring, so structures reflect.
+      const foldedRe = Math.abs(zRe);
+      nextRe = foldedRe * foldedRe - zIm * zIm + params.cRe;
+      nextIm = 2 * foldedRe * zIm + params.cIm;
+    } else if (params.variant === 2) {
+      // Tricorn: conjugate before squaring.
+      nextRe = zRe * zRe - zIm * zIm + params.cRe;
+      nextIm = -2 * zRe * zIm + params.cIm;
+    } else if (params.variant === 3) {
+      // Phoenix: feedback from the previous iterate.
+      nextRe = zRe * zRe - zIm * zIm + params.cRe + params.phoenixRe * zPrevRe;
+      nextIm = 2 * zRe * zIm + params.phoenixRe * zPrevIm;
+    } else {
+      nextRe = zRe * zRe - zIm * zIm + params.cRe;
+      nextIm = 2 * zRe * zIm + params.cIm;
+    }
+
+    zPrevRe = zRe;
+    zPrevIm = zIm;
+    zRe = nextRe;
+    zIm = nextIm;
+  }
+
+  return -1;
+}
+
+function ArticleFractalBackdrop({accent, seedKey}: {accent: string; seedKey: string}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) {
+      return undefined;
+    }
+
+    const params = createFractalParams(seedKey);
+    const accentRgb = parseAccentRgb(accent);
+    const deepRgb: [number, number, number] = [8, 11, 16];
+    const paletteStops: Array<{at: number; rgb: [number, number, number]}> = [
+      {at: 0, rgb: deepRgb},
+      {at: 0.38, rgb: mixChannels(deepRgb, accentRgb, 0.45)},
+      {at: 0.62, rgb: accentRgb},
+      {at: 0.86, rgb: mixChannels(accentRgb, [235, 240, 248], 0.55)},
+      {at: 1, rgb: [240, 244, 250]},
+    ];
+
+    const samplePalette = (t: number): [number, number, number] => {
+      for (let index = 1; index < paletteStops.length; index += 1) {
+        if (t <= paletteStops[index].at) {
+          const previous = paletteStops[index - 1];
+          const next = paletteStops[index];
+          const local = (t - previous.at) / (next.at - previous.at);
+          return mixChannels(previous.rgb, next.rgb, local);
+        }
+      }
+      return paletteStops[paletteStops.length - 1].rgb;
+    };
+
+    context.clearRect(0, 0, FRACTAL_RENDER_WIDTH, FRACTAL_RENDER_HEIGHT);
+
+    const rotationCos = Math.cos(params.rotation);
+    const rotationSin = Math.sin(params.rotation);
+    const aspect = FRACTAL_RENDER_WIDTH / FRACTAL_RENDER_HEIGHT;
+    const interiorRgb = mixChannels(deepRgb, accentRgb, 0.28);
+    let nextRow = 0;
+    let frameHandle = 0;
+
+    const renderChunk = () => {
+      const rowLimit = Math.min(nextRow + FRACTAL_ROWS_PER_FRAME, FRACTAL_RENDER_HEIGHT);
+      const chunk = context.createImageData(FRACTAL_RENDER_WIDTH, rowLimit - nextRow);
+      const pixels = chunk.data;
+
+      for (let y = nextRow; y < rowLimit; y += 1) {
+        const v = ((y / FRACTAL_RENDER_HEIGHT) * 2 - 1) / params.zoom;
+        for (let x = 0; x < FRACTAL_RENDER_WIDTH; x += 1) {
+          const u = (((x / FRACTAL_RENDER_WIDTH) * 2 - 1) * aspect) / params.zoom;
+          const startRe = u * rotationCos - v * rotationSin + params.centerX;
+          const startIm = u * rotationSin + v * rotationCos + params.centerY;
+          const smoothIterations = iterateFractalPixel(params, startRe, startIm);
+
+          const offset = ((y - nextRow) * FRACTAL_RENDER_WIDTH + x) * 4;
+          if (smoothIterations < 0) {
+            pixels[offset] = interiorRgb[0];
+            pixels[offset + 1] = interiorRgb[1];
+            pixels[offset + 2] = interiorRgb[2];
+            pixels[offset + 3] = 150;
+          } else {
+            // Log scaling spreads the low escape counts (most pixels) across the
+            // palette; linear scaling leaves all but the filaments near-black.
+            const normalized = Math.min(
+              1,
+              Math.max(0, Math.log(1 + smoothIterations) / Math.log(1 + FRACTAL_MAX_ITERATIONS)),
+            );
+            const shaped = Math.pow(normalized, 1.1);
+            const rgb = samplePalette(shaped);
+            pixels[offset] = rgb[0];
+            pixels[offset + 1] = rgb[1];
+            pixels[offset + 2] = rgb[2];
+            pixels[offset + 3] = Math.round(30 + shaped * 225);
+          }
+        }
+      }
+
+      context.putImageData(chunk, 0, nextRow);
+      nextRow = rowLimit;
+      if (nextRow < FRACTAL_RENDER_HEIGHT) {
+        frameHandle = window.requestAnimationFrame(renderChunk);
+      }
+    };
+
+    frameHandle = window.requestAnimationFrame(renderChunk);
+    return () => window.cancelAnimationFrame(frameHandle);
+  }, [accent, seedKey]);
+
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[26rem] overflow-hidden md:h-[34rem] [mask-image:linear-gradient(to_bottom,rgba(0,0,0,0.92),rgba(0,0,0,0.5)_58%,transparent_96%)]"
+    >
+      <canvas
+        ref={canvasRef}
+        width={FRACTAL_RENDER_WIDTH}
+        height={FRACTAL_RENDER_HEIGHT}
+        className="h-full w-full object-cover opacity-75 blur-[1px]"
+      />
+    </div>
+  );
+}
+
 function ModelArticlePanel({
   entry,
   onBack,
@@ -3983,6 +4238,7 @@ function ModelArticlePanel({
       transition={{duration: 0.38, ease: [0.22, 1, 0.36, 1]}}
       className="fixed inset-y-0 right-0 z-40 w-full overflow-y-auto border-l border-[var(--edge-strong)] bg-[rgba(8,11,16,0.98)] shadow-[0_34px_100px_-42px_rgba(0,0,0,0.9)] backdrop-blur-xl md:w-[min(760px,58vw)]"
     >
+      {entry ? <ArticleFractalBackdrop accent={entry.accent} seedKey={requestedSlug} /> : null}
       <article className="min-h-full px-5 py-5 md:px-8 md:py-8">
         <div className="sticky top-0 z-20 -mx-5 flex items-center justify-between gap-3 border-b border-[var(--edge)] bg-[rgba(8,11,16,0.94)] px-5 py-4 shadow-[0_18px_34px_-28px_rgba(0,0,0,0.95)] backdrop-blur-xl md:static md:mx-0 md:border-b-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
           <button
