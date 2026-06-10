@@ -41,10 +41,10 @@ function Hn(t, a, n = "day", r = "day") {
 function Vn(t, a, n) {
   return n.articleSlug ?? fo(t, a, n.name, n.date);
 }
-function ks(t) {
+function Is(t) {
   return t.reduce((a, n) => (a[n.slug] = n, a), {});
 }
-function Is({
+function Ls({
   articlesBySlug: t,
   eventTypesById: a,
   fallbackEventTypeId: n,
@@ -542,19 +542,19 @@ function Ni(t, a) {
         presets: Da(l, x, w),
         tags: cr(l, x, w)
       })).sort((w, P) => {
-        const z = Le(w.date).getTime(), k = Le(P.date).getTime();
-        return z - k || w.name.localeCompare(P.name);
+        const Y = Le(w.date).getTime(), k = Le(P.date).getTime();
+        return Y - k || w.name.localeCompare(P.name);
       }).reduce((w, P) => {
-        const z = Le(P.date), k = P.endDate ? Le(P.endDate) : z;
-        if (Number.isNaN(z.getTime()))
+        const Y = Le(P.date), k = P.endDate ? Le(P.endDate) : Y;
+        if (Number.isNaN(Y.getTime()))
           return n.push(`${l.name} / ${x.label}: ${P.name}`), w;
         if (P.endDate && Number.isNaN(k.getTime()))
           return n.push(`${l.name} / ${x.label}: ${P.name} end date`), w;
-        const O = w[w.length - 1], q = Math.round((z.getTime() - at().getTime()) / nt), Z = Number.isNaN(k.getTime()) ? q : Math.max(q, Math.round((k.getTime() - at().getTime()) / nt)), H = O ? q - O.globalDay : 0, de = Ca(P), j = Kn(l, x, P, a);
+        const B = w[w.length - 1], q = Math.round((Y.getTime() - at().getTime()) / nt), Z = Number.isNaN(k.getTime()) ? q : Math.max(q, Math.round((k.getTime() - at().getTime()) / nt)), H = B ? q - B.globalDay : 0, de = Ca(P), j = Kn(l, x, P, a);
         return w.push({
           ...P,
           articleSlug: Vn(l.id, x.id, P),
-          dateLabel: Ie(z, void 0, P.datePrecision),
+          dateLabel: Ie(Y, void 0, P.datePrecision),
           dateRangeLabel: Hn(P.date, P.endDate, P.datePrecision),
           durationDays: Z - q + 1,
           endDateLabel: P.endDate ? Ie(P.endDate) : void 0,
@@ -790,10 +790,10 @@ function Vt({
       y - c * (t ? 0.28 : 0.24),
       w - (t ? 18 : 24)
     )
-  ), z = t ? Q + F + 18 : Math.min(Q + F + 28, A + f - te - 24), k = w + 8, O = Q, q = y + s + (t ? 42 : 52), Z = Q, H = q + (t ? 132 : 118), de = t ? f >= 640 ? 2 : 1 : 4, E = Math.max(1, Math.ceil(Math.max(r, 1) / de)) * (t ? 172 : 224), C = v + m + Math.max(n, 0) * Ae, I = v + e * Ae, _ = Math.max(
+  ), Y = t ? Q + F + 18 : Math.min(Q + F + 28, A + f - te - 24), k = w + 8, B = Q, q = y + s + (t ? 42 : 52), Z = Q, H = q + (t ? 132 : 118), de = t ? f >= 640 ? 2 : 1 : 4, E = Math.max(1, Math.ceil(Math.max(r, 1) / de)) * (t ? 172 : 224), C = v + m + Math.max(n, 0) * Ae, I = v + e * Ae, _ = Math.max(
     C + b,
     I + l + m + b,
-    z + te + b,
+    Y + te + b,
     Z + se + b,
     A + f + b
   ), g = Math.max(
@@ -805,8 +805,8 @@ function Vt({
   return {
     contentCards: {
       intro: { height: t ? 176 : 202, width: F, x: Q, y: w },
-      latest: { height: t ? 96 : 74, width: re, x: O, y: q },
-      notes: { height: t ? 142 : 170, width: te, x: z, y: k },
+      latest: { height: t ? 96 : 74, width: re, x: B, y: q },
+      notes: { height: t ? 142 : 170, width: te, x: Y, y: k },
       summaries: { width: se, x: Z, y: H }
     },
     initialCameraX: A,
@@ -1178,19 +1178,19 @@ function ji({
   visibleCompanyCount: w
 }) {
   var le;
-  const P = l.domainIds.length + l.attributeIds.length + l.companyIds.length + (l.contentType === "all" ? 0 : 1), z = Q === "rail", k = z && !d, O = qe(), q = `${z ? d ? "w-[var(--category-expanded-width,286px)]" : "w-[74px]" : "w-full"} timeline-fluid-obstacle overflow-hidden rounded-[1.6rem] border border-[var(--edge)] bg-[var(--surface)] shadow-[var(--soft-shadow)] backdrop-blur-xl transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${k ? "cursor-pointer hover:bg-[var(--surface-strong)]" : ""} ${n}`, Z = ({
+  const P = l.domainIds.length + l.attributeIds.length + l.companyIds.length + (l.contentType === "all" ? 0 : 1), Y = Q === "rail", k = Y && !d, B = qe(), q = `${Y ? d ? "w-[var(--category-expanded-width,286px)]" : "w-[74px]" : "w-full"} timeline-fluid-obstacle overflow-hidden rounded-[1.6rem] border border-[var(--edge)] bg-[var(--surface)] shadow-[var(--soft-shadow)] backdrop-blur-xl transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${k ? "cursor-pointer hover:bg-[var(--surface-strong)]" : ""} ${n}`, Z = ({
     buttonKey: E,
     description: C,
     icon: I,
     isSelected: _,
     meta: g,
     onClick: N,
-    title: W
+    title: O
   }) => /* @__PURE__ */ h(
     "button",
     {
       type: "button",
-      title: W,
+      title: O,
       disabled: !d,
       onClick: N,
       className: `flex h-11 w-full items-center gap-2 rounded-[0.85rem] border px-2.5 text-left transition duration-300 active:scale-[0.99] ${_ ? "border-[var(--edge-strong)] bg-[var(--surface-strong)]" : "border-[var(--edge)] bg-transparent hover:border-[var(--edge-strong)] hover:bg-[var(--surface)]"}`,
@@ -1225,7 +1225,7 @@ function ji({
         children: [
           /* @__PURE__ */ o("span", { className: "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--edge)] bg-[var(--surface-strong)] text-[var(--ink)] shadow-[var(--soft-shadow)]", children: /* @__PURE__ */ o(Qr, { className: "h-4 w-4", strokeWidth: 1.8 }) }),
           d ? /* @__PURE__ */ h("span", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ o("span", { className: "block text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]", children: O.filterPanelLabel }),
+            /* @__PURE__ */ o("span", { className: "block text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]", children: B.filterPanelLabel }),
             /* @__PURE__ */ o("span", { className: "mt-1 block truncate text-sm font-semibold tracking-tight text-[var(--ink)]", children: a.label }),
             /* @__PURE__ */ h("span", { className: "mt-1 block font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--muted)]", children: [
               w,
@@ -1280,7 +1280,7 @@ function ji({
                   }) })
                 ] }, E.label)),
                 /* @__PURE__ */ h("div", { className: "border-t border-[var(--edge)] pt-3", children: [
-                  /* @__PURE__ */ o("p", { className: "mb-1.5 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: O.contentTypeHeading }),
+                  /* @__PURE__ */ o("p", { className: "mb-1.5 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: B.contentTypeHeading }),
                   /* @__PURE__ */ o("div", { className: "grid grid-cols-3 gap-1.5", children: qt().map((E) => {
                     const C = l.contentType === E.id, I = E.id === "events" ? jt : E.id === "releases" ? Bn : rt;
                     return /* @__PURE__ */ h(
@@ -1307,11 +1307,11 @@ function ji({
                       type: "button",
                       disabled: !d,
                       onClick: A,
-                      title: O.selectAllTitle,
+                      title: B.selectAllTitle,
                       className: "inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-[var(--edge)] px-2 text-[11px] font-medium text-[var(--ink-soft)] transition duration-300 hover:border-[var(--edge-strong)] hover:bg-[var(--surface)] active:scale-[0.98]",
                       children: [
                         /* @__PURE__ */ o(rt, { className: "h-3.5 w-3.5", strokeWidth: 1.8 }),
-                        O.selectAllLabel
+                        B.selectAllLabel
                       ]
                     }
                   ),
@@ -1321,11 +1321,11 @@ function ji({
                       type: "button",
                       disabled: !d,
                       onClick: c,
-                      title: O.clearFiltersTitle,
+                      title: B.clearFiltersTitle,
                       className: "inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-[var(--edge)] px-2 text-[11px] font-medium text-[var(--ink-soft)] transition duration-300 hover:border-[var(--edge-strong)] hover:bg-[var(--surface)] active:scale-[0.98]",
                       children: [
                         /* @__PURE__ */ o(On, { className: "h-3.5 w-3.5 shrink-0", strokeWidth: 1.8 }),
-                        O.clearFiltersLabel
+                        B.clearFiltersLabel
                       ]
                     }
                   ),
@@ -1335,11 +1335,11 @@ function ji({
                       type: "button",
                       disabled: !d,
                       onClick: D,
-                      title: O.resetFiltersTitle,
+                      title: B.resetFiltersTitle,
                       className: "inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-[var(--edge)] px-2 text-[11px] font-medium text-[var(--ink-soft)] transition duration-300 hover:border-[var(--edge-strong)] hover:bg-[var(--surface)] active:scale-[0.98]",
                       children: [
                         /* @__PURE__ */ o(Gt, { className: "h-3.5 w-3.5 shrink-0", strokeWidth: 1.8 }),
-                        O.resetFiltersLabel
+                        B.resetFiltersLabel
                       ]
                     }
                   )
@@ -1362,7 +1362,7 @@ function ji({
                     title: C.description
                   });
                 }) }),
-                /* @__PURE__ */ o("p", { className: "mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: O.companyFiltersHeading }),
+                /* @__PURE__ */ o("p", { className: "mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: B.companyFiltersHeading }),
                 /* @__PURE__ */ o("div", { className: "max-h-44 space-y-1.5 overflow-y-auto pr-1", children: e.length > 0 ? /* @__PURE__ */ h(gt, { children: [
                   /* @__PURE__ */ h(
                     "button",
@@ -1370,10 +1370,10 @@ function ji({
                       type: "button",
                       disabled: !d,
                       onClick: m,
-                      title: O.allRelevantLabel,
+                      title: B.allRelevantLabel,
                       className: `flex h-8 w-full items-center justify-between rounded-[0.75rem] border px-2 text-left text-[11px] font-semibold tracking-tight transition duration-300 active:scale-[0.99] ${l.companyIds.length === 0 ? "border-[var(--edge-strong)] bg-[var(--surface-strong)] text-[var(--ink)]" : "border-[var(--edge)] text-[var(--ink-soft)] hover:border-[var(--edge-strong)] hover:bg-[var(--surface)]"}`,
                       children: [
-                        O.allRelevantLabel,
+                        B.allRelevantLabel,
                         /* @__PURE__ */ h("span", { className: "font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--muted)]", children: [
                           e.length,
                           "c"
@@ -1402,8 +1402,8 @@ function ji({
                       E.id
                     );
                   })
-                ] }) : /* @__PURE__ */ o("div", { className: "rounded-[0.75rem] border border-[var(--edge)] px-2 py-2 text-[11px] leading-4 text-[var(--muted)]", children: O.companyFilterEmpty }) }),
-                /* @__PURE__ */ o("p", { className: "mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: O.sortHeading }),
+                ] }) : /* @__PURE__ */ o("div", { className: "rounded-[0.75rem] border border-[var(--edge)] px-2 py-2 text-[11px] leading-4 text-[var(--muted)]", children: B.companyFilterEmpty }) }),
+                /* @__PURE__ */ o("p", { className: "mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: B.sortHeading }),
                 /* @__PURE__ */ o("div", { className: "grid grid-cols-1 gap-1.5", children: H.map((E) => {
                   const C = r === E.id;
                   return /* @__PURE__ */ h(
@@ -1426,7 +1426,7 @@ function ji({
                     E.id
                   );
                 }) }),
-                /* @__PURE__ */ o("p", { className: "mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: O.displayedRowsHeading }),
+                /* @__PURE__ */ o("p", { className: "mb-1.5 mt-3 px-1 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]", children: B.displayedRowsHeading }),
                 /* @__PURE__ */ o("div", { className: "grid grid-cols-4 gap-1.5 md:grid-cols-2", children: jn().map((E) => {
                   const C = re === E, I = E === "all" ? "All" : String(E);
                   return /* @__PURE__ */ o(
@@ -1447,7 +1447,7 @@ function ji({
         )
       }
     ),
-    /* @__PURE__ */ o(He, { initial: !1, children: !d && z ? /* @__PURE__ */ h(
+    /* @__PURE__ */ o(He, { initial: !1, children: !d && Y ? /* @__PURE__ */ h(
       ge.div,
       {
         initial: { opacity: 0, y: 8 },
@@ -1456,7 +1456,7 @@ function ji({
         transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
         className: "flex flex-col items-center gap-3 px-2 pb-5",
         children: [
-          /* @__PURE__ */ o("span", { className: "font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]", style: { writingMode: "vertical-rl" }, children: O.filterPanelLabel }),
+          /* @__PURE__ */ o("span", { className: "font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]", style: { writingMode: "vertical-rl" }, children: B.filterPanelLabel }),
           /* @__PURE__ */ o("span", { className: "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--edge)] bg-[var(--surface-strong)] font-mono text-[10px] text-[var(--ink-soft)]", children: P })
         ]
       },
@@ -1494,16 +1494,16 @@ function fr({
   onZoomChange: s,
   zoom: l
 }) {
-  const d = ne(null), f = ne(null), c = ne(null), m = ne(null), v = ne(null), [y, b] = Ee(!1), [x, D] = Ee(!1), [A, F] = Ee(!1), te = mr(l, r, n), re = 8 + (1 - te) * 84, se = a ? "h-3.5 w-3.5" : "h-4 w-4", Q = y || x || A, w = Q ? a ? "h-10 min-w-10 px-2 text-[9px]" : "h-11 min-w-11 px-2.5 text-[10px]" : a ? "h-4 min-w-4 px-0 text-[0px]" : "h-5 min-w-5 px-0 text-[0px]", P = a ? "group-hover/zoomrail:h-10 group-hover/zoomrail:min-w-10 group-hover/zoomrail:px-2 group-hover/zoomrail:text-[9px] group-focus-within/zoomrail:h-10 group-focus-within/zoomrail:min-w-10 group-focus-within/zoomrail:px-2 group-focus-within/zoomrail:text-[9px]" : "group-hover/zoomrail:h-11 group-hover/zoomrail:min-w-11 group-hover/zoomrail:px-2.5 group-hover/zoomrail:text-[10px] group-focus-within/zoomrail:h-11 group-focus-within/zoomrail:min-w-11 group-focus-within/zoomrail:px-2.5 group-focus-within/zoomrail:text-[10px]", z = y ? "text-[var(--ink)] opacity-100" : "opacity-45", k = (g, N = !1) => {
-    const W = () => {
+  const d = ne(null), f = ne(null), c = ne(null), m = ne(null), v = ne(null), [y, b] = Ee(!1), [x, D] = Ee(!1), [A, F] = Ee(!1), te = mr(l, r, n), re = 8 + (1 - te) * 84, se = a ? "h-3.5 w-3.5" : "h-4 w-4", Q = y || x || A, w = Q ? a ? "h-10 min-w-10 px-2 text-[9px]" : "h-11 min-w-11 px-2.5 text-[10px]" : a ? "h-4 min-w-4 px-0 text-[0px]" : "h-5 min-w-5 px-0 text-[0px]", P = a ? "group-hover/zoomrail:h-10 group-hover/zoomrail:min-w-10 group-hover/zoomrail:px-2 group-hover/zoomrail:text-[9px] group-focus-within/zoomrail:h-10 group-focus-within/zoomrail:min-w-10 group-focus-within/zoomrail:px-2 group-focus-within/zoomrail:text-[9px]" : "group-hover/zoomrail:h-11 group-hover/zoomrail:min-w-11 group-hover/zoomrail:px-2.5 group-hover/zoomrail:text-[10px] group-focus-within/zoomrail:h-11 group-focus-within/zoomrail:min-w-11 group-focus-within/zoomrail:px-2.5 group-focus-within/zoomrail:text-[10px]", Y = y ? "text-[var(--ink)] opacity-100" : "opacity-45", k = (g, N = !1) => {
+    const O = () => {
       b(g), e == null || e(g);
     };
     if (N) {
-      Xn(W);
+      Xn(O);
       return;
     }
-    W();
-  }, O = (g) => {
+    O();
+  }, B = (g) => {
     const N = Number(g.currentTarget.value);
     s(() => Ea(N, r, n));
   };
@@ -1512,12 +1512,12 @@ function fr({
     v.current !== null && window.cancelAnimationFrame(v.current), m.current = null, (g = c.current) == null || g.call(c), e == null || e(!1);
   }, [e]);
   const q = (g) => {
-    var X;
-    const N = (X = d.current) == null ? void 0 : X.getBoundingClientRect();
+    var W;
+    const N = (W = d.current) == null ? void 0 : W.getBoundingClientRect();
     if (!N || N.height <= 0)
       return;
-    const W = ce(1 - (g - N.top) / N.height, 0, 1);
-    s(() => Ea(W, r, n));
+    const O = ce(1 - (g - N.top) / N.height, 0, 1);
+    s(() => Ea(O, r, n));
   }, Z = () => {
     v.current !== null && (window.cancelAnimationFrame(v.current), v.current = null);
     const g = m.current;
@@ -1538,32 +1538,32 @@ function fr({
     var g;
     Z(), (g = c.current) == null || g.call(c), c.current = null, k(!1);
   }, C = (g) => {
-    var X;
+    var W;
     if (g.button !== 0 || f.current !== null)
       return;
-    (X = c.current) == null || X.call(c), k(!0, !0), q(g.clientY);
+    (W = c.current) == null || W.call(c), k(!0, !0), q(g.clientY);
     const N = (J) => {
       H(J.clientY), J.preventDefault();
-    }, W = () => E();
-    window.addEventListener("mousemove", N), window.addEventListener("mouseup", W, { once: !0 }), c.current = () => {
-      window.removeEventListener("mousemove", N), window.removeEventListener("mouseup", W);
+    }, O = () => E();
+    window.addEventListener("mousemove", N), window.addEventListener("mouseup", O, { once: !0 }), c.current = () => {
+      window.removeEventListener("mousemove", N), window.removeEventListener("mouseup", O);
     };
   }, I = (g) => {
     const N = g.shiftKey ? fa : Ho;
     if (g.key === "ArrowUp" || g.key === "ArrowRight") {
-      s((W) => Et(W, N, r, n)), g.preventDefault();
+      s((O) => Et(O, N, r, n)), g.preventDefault();
       return;
     }
     if (g.key === "ArrowDown" || g.key === "ArrowLeft") {
-      s((W) => Et(W, -N, r, n)), g.preventDefault();
+      s((O) => Et(O, -N, r, n)), g.preventDefault();
       return;
     }
     if (g.key === "PageUp") {
-      s((W) => Et(W, fa, r, n)), g.preventDefault();
+      s((O) => Et(O, fa, r, n)), g.preventDefault();
       return;
     }
     if (g.key === "PageDown") {
-      s((W) => Et(W, -fa, r, n)), g.preventDefault();
+      s((O) => Et(O, -fa, r, n)), g.preventDefault();
       return;
     }
     if (g.key === "Home") {
@@ -1579,7 +1579,7 @@ function fr({
     {
       "aria-label": "Timeline zoom controls",
       role: "group",
-      className: `absolute z-40 flex ${a ? "min-h-[17rem] w-12 py-3" : "min-h-[22rem] w-14 py-4"} group/zoomrail select-none flex-col items-center justify-center gap-3 px-2 text-[var(--ink-soft)] transition-[opacity,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-[var(--ink)] hover:opacity-100 focus-within:text-[var(--ink)] focus-within:opacity-100 ${z} ${t}`,
+      className: `absolute z-40 flex ${a ? "min-h-[17rem] w-12 py-3" : "min-h-[22rem] w-14 py-4"} group/zoomrail select-none flex-col items-center justify-center gap-3 px-2 text-[var(--ink-soft)] transition-[opacity,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-[var(--ink)] hover:opacity-100 focus-within:text-[var(--ink)] focus-within:opacity-100 ${Y} ${t}`,
       onBlur: _,
       onFocus: () => D(!0),
       onMouseEnter: () => F(!0),
@@ -1653,7 +1653,7 @@ function fr({
                   step: "0.001",
                   value: te,
                   onBlur: () => k(!1),
-                  onChange: O,
+                  onChange: B,
                   onKeyDown: I,
                   onPointerCancel: () => k(!1),
                   onPointerDown: () => k(!0, !0),
@@ -1797,10 +1797,10 @@ function Ji({
         ) }),
         /* @__PURE__ */ o(He, { initial: !1, mode: "popLayout", children: d.releases.map((w, P) => {
           var ue, ee;
-          const z = d.releases[P - 1], k = t === w.articleSlug, O = k || Ft(w.globalDay, w.endGlobalDay, c), q = !!z && Ft((z == null ? void 0 : z.globalDay) ?? w.globalDay, w.globalDay, c), Z = w.endGlobalDay > w.globalDay && Ft(w.globalDay, w.endGlobalDay, c);
-          if (!O && !q && !Z)
+          const Y = d.releases[P - 1], k = t === w.articleSlug, B = k || Ft(w.globalDay, w.endGlobalDay, c), q = !!Y && Ft((Y == null ? void 0 : Y.globalDay) ?? w.globalDay, w.globalDay, c), Z = w.endGlobalDay > w.globalDay && Ft(w.globalDay, w.endGlobalDay, c);
+          if (!B && !q && !Z)
             return null;
-          const H = ze(w.globalDay, m), de = z ? ze(z.globalDay, m) : H, j = z ? Math.max(0, H - de) : 0, le = z ? Ai(w.gap, d.averageGap) : null, E = Wt(w.globalDay, w.endGlobalDay), C = ((ue = d.latestRelease) == null ? void 0 : ue.name) === w.name && ((ee = d.latestRelease) == null ? void 0 : ee.date) === w.date, I = C ? xa(n.accent, 255, 0.12) : xa(n.accent, 255, 0.24), _ = Oe(n.accent, C ? 0.52 : 0.34), g = w.tags.includes("landmark-release"), N = C ? Oe(n.accent, 0.12) : g ? Oe(n.accent, 0.08) : void 0, X = w.eventKind === "event" ? "Open event" : "Open release", J = k ? `0 0 0 ${a ? 3 : 4}px rgba(237, 242, 250, 0.92), 0 0 0 ${a ? 7 : 8}px color-mix(in srgb, ${n.accent} 48%, transparent)` : g ? `0 0 0 ${a ? 5 : 6}px color-mix(in srgb, ${n.accent} 24%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 50%, transparent), 0 0 42px color-mix(in srgb, ${n.accent} 28%, transparent)` : C ? `0 0 0 ${a ? 4 : 5}px color-mix(in srgb, ${n.accent} 20%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 40%, transparent)` : `0 0 0 4px color-mix(in srgb, ${n.accent} 11%, transparent)`, K = k ? "saturate(1.45) brightness(1.14)" : g ? "saturate(1.38) brightness(1.1)" : C ? "saturate(1.35) brightness(1.08)" : void 0;
+          const H = ze(w.globalDay, m), de = Y ? ze(Y.globalDay, m) : H, j = Y ? Math.max(0, H - de) : 0, le = Y ? Ai(w.gap, d.averageGap) : null, E = Wt(w.globalDay, w.endGlobalDay), C = ((ue = d.latestRelease) == null ? void 0 : ue.name) === w.name && ((ee = d.latestRelease) == null ? void 0 : ee.date) === w.date, I = C ? xa(n.accent, 255, 0.12) : xa(n.accent, 255, 0.24), _ = Oe(n.accent, C ? 0.52 : 0.34), g = w.tags.includes("landmark-release"), N = C ? Oe(n.accent, 0.12) : g ? Oe(n.accent, 0.08) : void 0, W = w.eventKind === "event" ? "Open event" : "Open release", J = k ? `0 0 0 ${a ? 3 : 4}px rgba(237, 242, 250, 0.92), 0 0 0 ${a ? 7 : 8}px color-mix(in srgb, ${n.accent} 48%, transparent)` : g ? `0 0 0 ${a ? 5 : 6}px color-mix(in srgb, ${n.accent} 24%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 50%, transparent), 0 0 42px color-mix(in srgb, ${n.accent} 28%, transparent)` : C ? `0 0 0 ${a ? 4 : 5}px color-mix(in srgb, ${n.accent} 20%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 40%, transparent)` : `0 0 0 4px color-mix(in srgb, ${n.accent} 11%, transparent)`, K = k ? "saturate(1.45) brightness(1.14)" : g ? "saturate(1.38) brightness(1.1)" : C ? "saturate(1.35) brightness(1.08)" : void 0;
           return /* @__PURE__ */ h(
             ge.div,
             {
@@ -1813,7 +1813,7 @@ function Ji({
               },
               className: "absolute inset-0",
               children: [
-                z && q ? /* @__PURE__ */ h(gt, { children: [
+                Y && q ? /* @__PURE__ */ h(gt, { children: [
                   /* @__PURE__ */ o(
                     ge.div,
                     {
@@ -1840,7 +1840,7 @@ function Ji({
                         "button",
                         {
                           type: "button",
-                          "aria-label": `Gap of ${ba(w.gap)} between ${z.name} and ${w.name}`,
+                          "aria-label": `Gap of ${ba(w.gap)} between ${Y.name} and ${w.name}`,
                           onPointerDown: (G) => G.stopPropagation(),
                           onClick: (G) => G.stopPropagation(),
                           className: "group/gap relative flex h-6 cursor-default items-center justify-center outline-none",
@@ -1863,7 +1863,7 @@ function Ji({
                                 className: "timeline-gap-tooltip pointer-events-none absolute left-1/2 top-full z-50 flex w-max max-w-[260px] flex-col gap-1 rounded-xl border border-[var(--edge-strong)] bg-[var(--surface-strong)] px-3 py-2 text-left opacity-0 shadow-[var(--panel-shadow)] transition-opacity duration-200 group-hover/gap:opacity-100 group-focus-visible/gap:opacity-100",
                                 children: [
                                   /* @__PURE__ */ h("span", { className: "font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]", children: [
-                                    z.name,
+                                    Y.name,
                                     " → ",
                                     w.name
                                   ] }),
@@ -1872,7 +1872,7 @@ function Ji({
                                     " gap"
                                   ] }),
                                   /* @__PURE__ */ h("span", { className: "font-mono text-[11px] text-[var(--ink-soft)]", children: [
-                                    z.dateLabel,
+                                    Y.dateLabel,
                                     " – ",
                                     w.dateLabel
                                   ] }),
@@ -1902,7 +1902,7 @@ function Ji({
                     }
                   }
                 ) : null,
-                O ? /* @__PURE__ */ o(
+                B ? /* @__PURE__ */ o(
                   ge.div,
                   {
                     initial: { opacity: 0, scale: 0.82, y: a ? 6 : 8 },
@@ -1921,7 +1921,7 @@ function Ji({
                         type: "button",
                         "data-timeline-pin": !0,
                         "aria-current": k ? "page" : void 0,
-                        "aria-label": `${X} for ${w.name}, ${w.dateRangeLabel}`,
+                        "aria-label": `${W} for ${w.name}, ${w.dateRangeLabel}`,
                         onClick: (G) => {
                           G.stopPropagation(), l(w.articleSlug);
                         },
@@ -1991,10 +1991,10 @@ function Ji({
                                   " · ",
                                   w.dateRangeLabel
                                 ] }),
-                                z ? /* @__PURE__ */ h("span", { className: "font-sans text-[11px] leading-snug text-[var(--muted)]", children: [
+                                Y ? /* @__PURE__ */ h("span", { className: "font-sans text-[11px] leading-snug text-[var(--muted)]", children: [
                                   ba(w.gap),
                                   " after ",
-                                  z.name
+                                  Y.name
                                 ] }) : null
                               ]
                             }
@@ -2266,14 +2266,14 @@ function rs({ media: t }) {
     t.caption ? /* @__PURE__ */ o("figcaption", { className: "border-t border-[var(--edge)] px-4 py-3 text-xs leading-5 text-[var(--ink-soft)]", children: t.caption }) : null
   ] });
 }
-const Sn = 640, An = 448, xr = 96, os = 4096, kn = 8, In = 5200, Ln = 16, _n = 190, Pn = 0.07;
-function is(t) {
+const Sn = 640, An = 448, xr = 96, os = 4096, kn = 8, In = 12e3, Ln = 10, _n = 70, Pn = 0.09, is = 0.35;
+function ss(t) {
   let a = 2166136261;
   for (let n = 0; n < t.length; n += 1)
     a ^= t.charCodeAt(n), a = Math.imul(a, 16777619);
   return a >>> 0;
 }
-function ss(t) {
+function ls(t) {
   let a = t || 1;
   return () => {
     a = a + 1831565813 | 0;
@@ -2281,7 +2281,7 @@ function ss(t) {
     return n = n + Math.imul(n ^ n >>> 7, 61 | n) ^ n, ((n ^ n >>> 14) >>> 0) / 4294967296;
   };
 }
-function ls(t) {
+function cs(t) {
   const a = t.replace("#", ""), n = a.length === 3 ? a.split("").map((e) => e + e).join("") : a, r = Number.parseInt(n, 16);
   return !Number.isFinite(r) || n.length !== 6 ? [125, 145, 175] : [r >> 16 & 255, r >> 8 & 255, r & 255];
 }
@@ -2302,8 +2302,8 @@ const Fn = [
   [0.5, -0.55],
   [0.6, -0.45]
 ];
-function cs(t) {
-  const a = ss(is(t)), n = Math.floor(a() * 4), r = a() * Math.PI * 2, e = 0.768 + a() * 0.034;
+function ds(t) {
+  const a = ls(ss(t)), n = Math.floor(a() * 4), r = a() * Math.PI * 2, e = 0.768 + a() * 0.034;
   let s = Math.cos(r) * e, l = Math.sin(r) * e, d = 0;
   if (n === 2) {
     const f = Fn[Math.floor(a() * Fn.length)];
@@ -2323,7 +2323,7 @@ function cs(t) {
     centerY: (a() - 0.5) * 0.3
   };
 }
-function ds(t, a, n) {
+function us(t, a, n) {
   let r = a, e = n, s = 0, l = 0;
   for (let d = 0; d < xr; d += 1) {
     const f = r * r + e * e;
@@ -2338,88 +2338,88 @@ function ds(t, a, n) {
   }
   return -1;
 }
-function us({ accent: t, seedKey: a }) {
+function ms({ accent: t, seedKey: a }) {
   const n = ne(null);
   return Ce(() => {
     const r = n.current, e = r == null ? void 0 : r.getContext("2d");
     if (!r || !e)
       return;
-    const s = cs(a), l = ls(t), d = [8, 11, 16], f = [
+    const s = ds(a), l = cs(t), d = [8, 11, 16], f = [
       { at: 0, rgb: d },
       { at: 0.38, rgb: Tt(d, l, 0.45) },
       { at: 0.62, rgb: l },
       { at: 0.86, rgb: Tt(l, [235, 240, 248], 0.55) },
       { at: 1, rgb: [240, 244, 250] }
-    ], c = (X) => {
+    ], c = (W) => {
       for (let J = 1; J < f.length; J += 1)
-        if (X <= f[J].at) {
-          const K = f[J - 1], ue = f[J], ee = (X - K.at) / (ue.at - K.at);
+        if (W <= f[J].at) {
+          const K = f[J - 1], ue = f[J], ee = (W - K.at) / (ue.at - K.at);
           return Tt(K.rgb, ue.rgb, ee);
         }
       return f[f.length - 1].rgb;
     }, m = Sn, v = An, y = m * v;
     e.clearRect(0, 0, m, v), e.imageSmoothingEnabled = !0, e.imageSmoothingQuality = "high";
-    const b = Math.cos(s.rotation), x = Math.sin(s.rotation), D = m / v, A = Tt(d, l, 0.28), F = Tt(l, [240, 244, 250], 0.7), te = (X) => {
-      if (X < 0)
+    const b = Math.cos(s.rotation), x = Math.sin(s.rotation), D = m / v, A = Tt(d, l, 0.28), F = Tt(l, [240, 244, 250], 0.7), te = (W) => {
+      if (W < 0)
         return 1;
       const J = Math.min(
         1,
-        Math.max(0, Math.log(1 + X) / Math.log(1 + xr))
+        Math.max(0, Math.log(1 + W) / Math.log(1 + xr))
       );
       return Math.pow(J, 1.1);
-    }, re = (X, J, K, ue) => {
-      const ee = ((J + 0.5) / ue * 2 - 1) / s.zoom, G = ((X + 0.5) / K * 2 - 1) * D / s.zoom, Y = G * b - ee * x + s.centerX, V = G * x + ee * b + s.centerY, ie = ds(s, Y, V);
+    }, re = (W, J, K, ue) => {
+      const ee = ((J + 0.5) / ue * 2 - 1) / s.zoom, G = ((W + 0.5) / K * 2 - 1) * D / s.zoom, X = G * b - ee * x + s.centerX, V = G * x + ee * b + s.centerY, ie = us(s, X, V);
       return {
         interior: ie < 0,
         shaped: te(ie)
       };
     }, se = Math.ceil(m / kn), Q = Math.ceil(v / kn), w = document.createElement("canvas");
     w.width = se, w.height = Q;
-    const P = w.getContext("2d"), z = document.createElement("canvas");
-    z.width = m, z.height = v;
-    const k = z.getContext("2d");
+    const P = w.getContext("2d"), Y = document.createElement("canvas");
+    Y.width = m, Y.height = v;
+    const k = Y.getContext("2d");
     if (!P || !k)
       return;
-    const O = P.createImageData(se, Q), q = k.createImageData(m, v), Z = new Uint8ClampedArray(y * 3), H = new Uint8ClampedArray(y), de = new Float32Array(y), j = (X) => X < 0.5 ? 4 * X * X * X : 1 - Math.pow(-2 * X + 2, 3) / 2;
+    const B = P.createImageData(se, Q), q = k.createImageData(m, v), Z = new Uint8ClampedArray(y * 3), H = new Uint8ClampedArray(y), de = new Float32Array(y), j = (W) => 1 - Math.pow(1 - W, 3);
     let le = !1, E = 0, C = "base", I = 0, _ = 0, g = 0, N = 0;
-    const W = () => {
+    const O = () => {
       if (le)
         return;
       if (C === "base") {
         const ee = Math.max(1, Math.floor(In / se)), G = Math.min(I + ee, Q);
-        for (let Y = I; Y < G; Y += 1)
+        for (let X = I; X < G; X += 1)
           for (let V = 0; V < se; V += 1) {
-            const ie = re(V, Y, se, Q), fe = (Y * se + V) * 4, be = ie.interior ? A : c(ie.shaped);
-            O.data[fe] = be[0], O.data[fe + 1] = be[1], O.data[fe + 2] = be[2], O.data[fe + 3] = ie.interior ? 150 : Math.round(30 + ie.shaped * 225);
+            const ie = re(V, X, se, Q), fe = (X * se + V) * 4, be = ie.interior ? A : c(ie.shaped);
+            B.data[fe] = be[0], B.data[fe + 1] = be[1], B.data[fe + 2] = be[2], B.data[fe + 3] = ie.interior ? 150 : Math.round(30 + ie.shaped * 225);
           }
-        I = G, I >= Q && (P.putImageData(O, 0, 0), C = "baseFade"), E = window.requestAnimationFrame(W);
+        I = G, I >= Q && (P.putImageData(B, 0, 0), C = "baseFade"), E = window.requestAnimationFrame(O);
         return;
       }
       if (C === "baseFade") {
-        _ += 1, e.clearRect(0, 0, m, v), e.globalAlpha = _ / Ln, e.drawImage(w, 0, 0, m, v), e.globalAlpha = 1, _ >= Ln && (C = "full"), E = window.requestAnimationFrame(W);
+        _ += 1, e.clearRect(0, 0, m, v), e.globalAlpha = _ / Ln, e.drawImage(w, 0, 0, m, v), e.globalAlpha = 1, _ >= Ln && (C = "full"), E = window.requestAnimationFrame(O);
         return;
       }
       if (C === "full") {
         const ee = Math.max(1, Math.floor(In / m)), G = Math.min(g + ee, v);
-        for (let Y = g; Y < G; Y += 1)
+        for (let X = g; X < G; X += 1)
           for (let V = 0; V < m; V += 1) {
-            const ie = re(V, Y, m, v), fe = Y * m + V, be = ie.interior ? A : c(ie.shaped);
+            const ie = re(V, X, m, v), fe = X * m + V, be = ie.interior ? A : c(ie.shaped);
             Z[fe * 3] = be[0], Z[fe * 3 + 1] = be[1], Z[fe * 3 + 2] = be[2], H[fe] = ie.interior ? 150 : Math.round(30 + ie.shaped * 225), de[fe] = ie.shaped;
           }
-        g = G, g >= v && (C = "reveal"), E = window.requestAnimationFrame(W);
+        g = G, g >= v && (C = "reveal"), E = window.requestAnimationFrame(O);
         return;
       }
       N += 1;
-      const X = Math.min(1, N / _n), J = j(X) * (1 + Pn * 2), K = q.data;
+      const W = Math.min(1, N / _n), J = j(W) * (1 + Pn * 2), K = q.data;
       for (let ee = 0; ee < y; ee += 1) {
-        const G = (J - de[ee]) / Pn, Y = G <= 0 ? 0 : G >= 1 ? 1 : G, V = Y * (1 - Y) * 2, ie = ee * 4;
-        K[ie] = Z[ee * 3] + (F[0] - Z[ee * 3]) * V, K[ie + 1] = Z[ee * 3 + 1] + (F[1] - Z[ee * 3 + 1]) * V, K[ie + 2] = Z[ee * 3 + 2] + (F[2] - Z[ee * 3 + 2]) * V, K[ie + 3] = H[ee] * Y + V * 70;
+        const G = (J - de[ee]) / Pn, X = G <= 0 ? 0 : G >= 1 ? 1 : G, V = X * (1 - X) * 2 * is, ie = ee * 4;
+        K[ie] = Z[ee * 3] + (F[0] - Z[ee * 3]) * V, K[ie + 1] = Z[ee * 3 + 1] + (F[1] - Z[ee * 3 + 1]) * V, K[ie + 2] = Z[ee * 3 + 2] + (F[2] - Z[ee * 3 + 2]) * V, K[ie + 3] = H[ee] * X + V * 30;
       }
       k.putImageData(q, 0, 0), e.clearRect(0, 0, m, v);
-      const ue = 1 - j(X);
-      ue > 3e-3 && (e.globalAlpha = ue, e.drawImage(w, 0, 0, m, v), e.globalAlpha = 1), e.drawImage(z, 0, 0), N < _n && (E = window.requestAnimationFrame(W));
+      const ue = 1 - j(W);
+      ue > 3e-3 && (e.globalAlpha = ue, e.drawImage(w, 0, 0, m, v), e.globalAlpha = 1), e.drawImage(Y, 0, 0), N < _n && (E = window.requestAnimationFrame(O));
     };
-    return E = window.requestAnimationFrame(W), () => {
+    return E = window.requestAnimationFrame(O), () => {
       le = !0, window.cancelAnimationFrame(E);
     };
   }, [t, a]), /* @__PURE__ */ o(
@@ -2439,7 +2439,7 @@ function us({ accent: t, seedKey: a }) {
     }
   );
 }
-function ms({
+function fs({
   entry: t,
   onBack: a,
   onNavigate: n,
@@ -2458,7 +2458,7 @@ function ms({
       transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
       className: "fixed inset-y-0 right-0 z-40 w-full overflow-y-auto border-l border-[var(--edge-strong)] bg-[rgba(8,11,16,0.98)] shadow-[0_34px_100px_-42px_rgba(0,0,0,0.9)] backdrop-blur-xl md:w-[min(760px,58vw)]",
       children: [
-        t ? /* @__PURE__ */ o(us, { accent: t.accent, seedKey: r }) : null,
+        t ? /* @__PURE__ */ o(ms, { accent: t.accent, seedKey: r }) : null,
         /* @__PURE__ */ h("article", { className: "min-h-full px-5 py-5 md:px-8 md:py-8", children: [
           /* @__PURE__ */ h("div", { className: "sticky top-0 z-20 -mx-5 flex items-center justify-between gap-3 border-b border-[var(--edge)] bg-[rgba(8,11,16,0.94)] px-5 py-4 shadow-[0_18px_34px_-28px_rgba(0,0,0,0.95)] backdrop-blur-xl md:static md:mx-0 md:border-b-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none", children: [
             /* @__PURE__ */ h(
@@ -2545,7 +2545,7 @@ function Un({
     /* @__PURE__ */ o("p", { className: "mt-4 max-w-[56ch] text-base leading-relaxed text-[var(--ink-soft)]", children: t })
   ] }) }) });
 }
-const fs = `
+const ps = `
 attribute vec2 aPosition;
 varying vec2 vUv;
 
@@ -2553,7 +2553,7 @@ void main() {
   vUv = aPosition * 0.5 + 0.5;
   gl_Position = vec4(aPosition, 0.0, 1.0);
 }
-`, ps = `
+`, hs = `
 precision mediump float;
 
 uniform sampler2D uVelocityMap;
@@ -2742,7 +2742,7 @@ void main() {
 
   gl_FragColor = encodeVelocity(velocity);
 }
-`, hs = `
+`, gs = `
 precision mediump float;
 
 uniform sampler2D uVelocityMap;
@@ -2769,7 +2769,7 @@ void main() {
 
   gl_FragColor = encodeScalar(curl);
 }
-`, gs = `
+`, vs = `
 precision mediump float;
 
 uniform sampler2D uVelocityMap;
@@ -2809,7 +2809,7 @@ void main() {
   velocity += clamp(confinement, vec2(-1.2), vec2(1.2)) * dt;
   gl_FragColor = encodeVelocity(velocity);
 }
-`, vs = `
+`, xs = `
 precision mediump float;
 
 uniform sampler2D uVelocityMap;
@@ -2860,7 +2860,7 @@ void main() {
 
   gl_FragColor = encodeScalar(divergence);
 }
-`, xs = `
+`, bs = `
 precision mediump float;
 
 uniform sampler2D uPressureMap;
@@ -2913,7 +2913,7 @@ void main() {
 
   gl_FragColor = encodeScalar(pressure);
 }
-`, bs = `
+`, ys = `
 precision mediump float;
 
 uniform sampler2D uVelocityMap;
@@ -2972,7 +2972,7 @@ void main() {
 
   gl_FragColor = encodeVelocity(velocity);
 }
-`, ys = `
+`, ws = `
 precision mediump float;
 
 uniform sampler2D uVelocityMap;
@@ -3120,7 +3120,7 @@ void main() {
 
   gl_FragColor = clamp(dye, 0.0, 1.0);
 }
-`, ws = `
+`, Ts = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
@@ -3467,7 +3467,7 @@ void main() {
   gl_FragColor = vec4(composedColor, 1.0);
 }
 `;
-function Ts() {
+function Es() {
   const t = ne(null), a = ne(!1), n = ne(!1);
   return Ce(() => {
     if (window.matchMedia("(max-width: 767px)").matches)
@@ -3487,12 +3487,12 @@ function Ts() {
       const $ = e.createShader(R);
       return $ ? (e.shaderSource($, M), e.compileShader($), e.getShaderParameter($, e.COMPILE_STATUS) ? $ : (console.warn(e.getShaderInfoLog($)), e.deleteShader($), null)) : null;
     }, l = (R) => {
-      const M = s(e.VERTEX_SHADER, fs), $ = s(e.FRAGMENT_SHADER, R);
+      const M = s(e.VERTEX_SHADER, ps), $ = s(e.FRAGMENT_SHADER, R);
       if (!M || !$)
         return M && e.deleteShader(M), $ && e.deleteShader($), null;
       const S = e.createProgram();
       return S ? (e.attachShader(S, M), e.attachShader(S, $), e.linkProgram(S), e.deleteShader(M), e.deleteShader($), e.getProgramParameter(S, e.LINK_STATUS) ? S : (console.warn(e.getProgramInfoLog(S)), e.deleteProgram(S), null)) : (e.deleteShader(M), e.deleteShader($), null);
-    }, d = l(ws), f = l(ps), c = l(hs), m = l(gs), v = l(vs), y = l(xs), b = l(bs), x = l(ys), D = () => {
+    }, d = l(Ts), f = l(hs), c = l(gs), m = l(vs), v = l(xs), y = l(bs), b = l(ys), x = l(ws), D = () => {
       [d, f, c, m, v, y, b, x].forEach((R) => {
         R && e.deleteProgram(R);
       });
@@ -3557,7 +3557,7 @@ function Ts() {
       texel: e.getUniformLocation(y, "uTexel"),
       obstacleRect: e.getUniformLocation(y, "uObstacleRect"),
       aspect: e.getUniformLocation(y, "uAspect")
-    }, z = {
+    }, Y = {
       velocityMap: e.getUniformLocation(b, "uVelocityMap"),
       pressureMap: e.getUniformLocation(b, "uPressureMap"),
       texel: e.getUniformLocation(b, "uTexel"),
@@ -3574,7 +3574,7 @@ function Ts() {
       elapsedTime: e.getUniformLocation(x, "uElapsedTime"),
       aspect: e.getUniformLocation(x, "uAspect"),
       emitterSeed: e.getUniformLocation(x, "uEmitterSeed")
-    }, O = (R) => {
+    }, B = (R) => {
       const M = e.createTexture(), $ = e.createFramebuffer();
       if (!M || !$)
         return M && e.deleteTexture(M), $ && e.deleteFramebuffer($), !1;
@@ -3583,13 +3583,13 @@ function Ts() {
       return e.bindFramebuffer(e.FRAMEBUFFER, null), e.deleteTexture(M), e.deleteFramebuffer($), S;
     }, Z = (() => {
       const R = e.getExtension("OES_texture_half_float"), M = e.getExtension("OES_texture_half_float_linear");
-      if (e.getExtension("EXT_color_buffer_half_float"), R && M && O(R.HALF_FLOAT_OES))
+      if (e.getExtension("EXT_color_buffer_half_float"), R && M && B(R.HALF_FLOAT_OES))
         return {
           filter: e.LINEAR,
           type: R.HALF_FLOAT_OES
         };
       const $ = e.getExtension("OES_texture_float"), S = e.getExtension("OES_texture_float_linear");
-      return e.getExtension("WEBGL_color_buffer_float"), $ && S && O(e.FLOAT) ? {
+      return e.getExtension("WEBGL_color_buffer_float"), $ && S && B(e.FLOAT) ? {
         filter: e.LINEAR,
         type: e.FLOAT
       } : {
@@ -3607,14 +3607,14 @@ function Ts() {
       const R = Math.min(window.devicePixelRatio || 1, 1.3), M = Math.max(120, Math.min(340, Math.floor(window.innerWidth * R / 5))), $ = Math.max(80, Math.min(220, Math.floor(window.innerHeight * R / 5)));
       return [M, $];
     };
-    let E = 0, C = !1, I = null, _ = null, g = null, N = null, W = null, X = 0, J = 0, K = 0;
+    let E = 0, C = !1, I = null, _ = null, g = null, N = null, O = null, W = 0, J = 0, K = 0;
     const ue = performance.now(), ee = window.matchMedia("(prefers-reduced-motion: reduce)"), G = [-1, -1, -1, -1];
-    let Y = [0.5, 0.5], V = [0, 0], ie = 0, fe = null, be = ue;
-    const B = () => {
+    let X = [0.5, 0.5], V = [0, 0], ie = 0, fe = null, be = ue;
+    const z = () => {
       const [R, M] = le();
       if ((I == null ? void 0 : I[0].width) === R && I[0].height === M)
         return !0;
-      I == null || I.forEach(j), _ == null || _.forEach(j), g == null || g.forEach(j), N && j(N), W && j(W);
+      I == null || I.forEach(j), _ == null || _.forEach(j), g == null || g.forEach(j), N && j(N), O && j(O);
       const $ = [
         H(R, M, [0.5, 0.5, 0, 1]),
         H(R, M, [0.5, 0.5, 0, 1])
@@ -3627,7 +3627,7 @@ function Ts() {
       ], Pe = H(R, M, [0.5, 0, 0, 1]), Se = H(R, M, [0.5, 0, 0, 1]), Xe = [...$, ...S, ...oe, Pe, Se];
       return Xe.some((Fe) => !Fe) ? (Xe.forEach((Fe) => {
         Fe && j(Fe);
-      }), I = null, _ = null, g = null, N = null, W = null, !1) : (I = $, _ = S, g = oe, N = Pe, W = Se, X = 0, J = 0, K = 0, !0);
+      }), I = null, _ = null, g = null, N = null, O = null, !1) : (I = $, _ = S, g = oe, N = Pe, O = Se, W = 0, J = 0, K = 0, !0);
     };
     let ve = ue;
     const Ke = 0.5, xe = [
@@ -3637,7 +3637,7 @@ function Ts() {
       Math.random()
     ], _e = () => {
       const M = Math.max(1, Math.floor(window.innerWidth * 1)), $ = Math.max(1, Math.floor(window.innerHeight * 1));
-      (r.width !== M || r.height !== $) && (r.width = M, r.height = $, e.viewport(0, 0, M, $)), e.useProgram(d), e.uniform2f(te.resolution, M, $), B();
+      (r.width !== M || r.height !== $) && (r.width = M, r.height = $, e.viewport(0, 0, M, $)), e.useProgram(d), e.uniform2f(te.resolution, M, $), z();
     }, L = (R) => {
       const M = R * 60;
       ie *= Math.pow(0.9, M), V = [
@@ -3661,7 +3661,7 @@ function Ts() {
           V[1] + (Se[1] - V[1]) * 0.74
         ];
       }
-      Y = S, fe = S, be = oe, ie = Math.min(1, ie + 0.92), ee.matches && Ue(oe);
+      X = S, fe = S, be = oe, ie = Math.min(1, ie + 0.92), ee.matches && Ue(oe);
     }, it = () => {
       const R = Math.max(window.innerWidth, 1), M = Math.max(window.innerHeight, 1), S = Array.from(document.querySelectorAll(".timeline-fluid-obstacle")).find((Pe) => {
         const Se = Pe.getBoundingClientRect(), Xe = window.getComputedStyle(Pe);
@@ -3677,23 +3677,23 @@ function Ts() {
         Math.max(0, Math.min(1, 1 - oe.top / M))
       ];
     }, ye = (R, M) => {
-      if (!I || !_ || !g || !N || !W)
+      if (!I || !_ || !g || !N || !O)
         return;
       const $ = r.width / Math.max(r.height, 1);
-      let S = I[X], oe = I[1 - X];
+      let S = I[W], oe = I[1 - W];
       const Pe = g[K];
-      e.bindFramebuffer(e.FRAMEBUFFER, oe.framebuffer), e.viewport(0, 0, oe.width, oe.height), e.useProgram(f), F(f), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Pe.texture), e.uniform1i(re.velocityMap, 0), e.uniform1i(re.dyeMap, 1), e.uniform2f(re.texel, 1 / S.width, 1 / S.height), e.uniform2f(re.pointerPosition, Y[0], Y[1]), e.uniform2f(re.pointerVelocity, V[0], V[1]), e.uniform1f(re.pointerActive, a.current ? ie : 0), e.uniform1f(re.pointerRadius, 0.088), e.uniform1f(re.deltaTime, R), e.uniform1f(re.elapsedTime, M), e.uniform1f(re.aspect, $), e.uniform4f(re.emitterSeed, xe[0], xe[1], xe[2], xe[3]), e.drawArrays(e.TRIANGLES, 0, 6), X = 1 - X, S = I[X], e.bindFramebuffer(e.FRAMEBUFFER, W.framebuffer), e.viewport(0, 0, W.width, W.height), e.useProgram(c), F(c), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(se.velocityMap, 0), e.uniform2f(se.texel, 1 / S.width, 1 / S.height), e.uniform1f(se.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), oe = I[1 - X], e.bindFramebuffer(e.FRAMEBUFFER, oe.framebuffer), e.viewport(0, 0, oe.width, oe.height), e.useProgram(m), F(m), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, W.texture), e.uniform1i(Q.velocityMap, 0), e.uniform1i(Q.curlMap, 1), e.uniform2f(Q.texel, 1 / S.width, 1 / S.height), e.uniform1f(Q.deltaTime, R * 0.25), e.uniform1f(Q.strength, 13), e.uniform1f(Q.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), X = 1 - X, S = I[X], e.bindFramebuffer(e.FRAMEBUFFER, N.framebuffer), e.viewport(0, 0, N.width, N.height), e.useProgram(v), F(v), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(w.velocityMap, 0), e.uniform2f(w.texel, 1 / S.width, 1 / S.height), e.uniform4f(w.obstacleRect, G[0], G[1], G[2], G[3]), e.uniform1f(w.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), _.forEach((Fe) => de(Fe, [0.5, 0, 0, 1])), J = 0;
+      e.bindFramebuffer(e.FRAMEBUFFER, oe.framebuffer), e.viewport(0, 0, oe.width, oe.height), e.useProgram(f), F(f), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Pe.texture), e.uniform1i(re.velocityMap, 0), e.uniform1i(re.dyeMap, 1), e.uniform2f(re.texel, 1 / S.width, 1 / S.height), e.uniform2f(re.pointerPosition, X[0], X[1]), e.uniform2f(re.pointerVelocity, V[0], V[1]), e.uniform1f(re.pointerActive, a.current ? ie : 0), e.uniform1f(re.pointerRadius, 0.088), e.uniform1f(re.deltaTime, R), e.uniform1f(re.elapsedTime, M), e.uniform1f(re.aspect, $), e.uniform4f(re.emitterSeed, xe[0], xe[1], xe[2], xe[3]), e.drawArrays(e.TRIANGLES, 0, 6), W = 1 - W, S = I[W], e.bindFramebuffer(e.FRAMEBUFFER, O.framebuffer), e.viewport(0, 0, O.width, O.height), e.useProgram(c), F(c), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(se.velocityMap, 0), e.uniform2f(se.texel, 1 / S.width, 1 / S.height), e.uniform1f(se.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), oe = I[1 - W], e.bindFramebuffer(e.FRAMEBUFFER, oe.framebuffer), e.viewport(0, 0, oe.width, oe.height), e.useProgram(m), F(m), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, O.texture), e.uniform1i(Q.velocityMap, 0), e.uniform1i(Q.curlMap, 1), e.uniform2f(Q.texel, 1 / S.width, 1 / S.height), e.uniform1f(Q.deltaTime, R * 0.25), e.uniform1f(Q.strength, 13), e.uniform1f(Q.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), W = 1 - W, S = I[W], e.bindFramebuffer(e.FRAMEBUFFER, N.framebuffer), e.viewport(0, 0, N.width, N.height), e.useProgram(v), F(v), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(w.velocityMap, 0), e.uniform2f(w.texel, 1 / S.width, 1 / S.height), e.uniform4f(w.obstacleRect, G[0], G[1], G[2], G[3]), e.uniform1f(w.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), _.forEach((Fe) => de(Fe, [0.5, 0, 0, 1])), J = 0;
       for (let Fe = 0; Fe < 12; Fe += 1) {
         const pe = _[J], Qe = _[1 - J];
         e.bindFramebuffer(e.FRAMEBUFFER, Qe.framebuffer), e.viewport(0, 0, Qe.width, Qe.height), e.useProgram(y), F(y), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, pe.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, N.texture), e.uniform1i(P.pressureMap, 0), e.uniform1i(P.divergenceMap, 1), e.uniform2f(P.texel, 1 / pe.width, 1 / pe.height), e.uniform4f(P.obstacleRect, G[0], G[1], G[2], G[3]), e.uniform1f(P.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), J = 1 - J;
       }
-      oe = I[1 - X], e.bindFramebuffer(e.FRAMEBUFFER, oe.framebuffer), e.viewport(0, 0, oe.width, oe.height), e.useProgram(b), F(b), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, _[J].texture), e.uniform1i(z.velocityMap, 0), e.uniform1i(z.pressureMap, 1), e.uniform2f(z.texel, 1 / S.width, 1 / S.height), e.uniform4f(z.obstacleRect, G[0], G[1], G[2], G[3]), e.uniform1f(z.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), X = 1 - X, S = I[X];
+      oe = I[1 - W], e.bindFramebuffer(e.FRAMEBUFFER, oe.framebuffer), e.viewport(0, 0, oe.width, oe.height), e.useProgram(b), F(b), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, _[J].texture), e.uniform1i(Y.velocityMap, 0), e.uniform1i(Y.pressureMap, 1), e.uniform2f(Y.texel, 1 / S.width, 1 / S.height), e.uniform4f(Y.obstacleRect, G[0], G[1], G[2], G[3]), e.uniform1f(Y.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), W = 1 - W, S = I[W];
       const Se = g[K], Xe = g[1 - K];
-      e.bindFramebuffer(e.FRAMEBUFFER, Xe.framebuffer), e.viewport(0, 0, Xe.width, Xe.height), e.useProgram(x), F(x), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Se.texture), e.uniform1i(k.velocityMap, 0), e.uniform1i(k.dyeMap, 1), e.uniform2f(k.pointerPosition, Y[0], Y[1]), e.uniform2f(k.pointerVelocity, V[0], V[1]), e.uniform1f(k.pointerActive, a.current ? ie : 0), e.uniform1f(k.pointerRadius, 0.088), e.uniform1f(k.deltaTime, R), e.uniform1f(k.elapsedTime, M), e.uniform1f(k.aspect, $), e.uniform4f(k.emitterSeed, xe[0], xe[1], xe[2], xe[3]), e.drawArrays(e.TRIANGLES, 0, 6), K = 1 - K;
+      e.bindFramebuffer(e.FRAMEBUFFER, Xe.framebuffer), e.viewport(0, 0, Xe.width, Xe.height), e.useProgram(x), F(x), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, S.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Se.texture), e.uniform1i(k.velocityMap, 0), e.uniform1i(k.dyeMap, 1), e.uniform2f(k.pointerPosition, X[0], X[1]), e.uniform2f(k.pointerVelocity, V[0], V[1]), e.uniform1f(k.pointerActive, a.current ? ie : 0), e.uniform1f(k.pointerRadius, 0.088), e.uniform1f(k.deltaTime, R), e.uniform1f(k.elapsedTime, M), e.uniform1f(k.aspect, $), e.uniform4f(k.emitterSeed, xe[0], xe[1], xe[2], xe[3]), e.drawArrays(e.TRIANGLES, 0, 6), K = 1 - K;
     }, Re = (R) => {
       if (!I || !g)
         return;
-      const M = I[X], $ = g[K];
+      const M = I[W], $ = g[K];
       e.bindFramebuffer(e.FRAMEBUFFER, null), e.viewport(0, 0, r.width, r.height), e.useProgram(d), F(d), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, M.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, $.texture), e.uniform1i(te.velocityMap, 0), e.uniform1i(te.dyeMap, 1), e.uniform2f(te.resolution, r.width, r.height), e.uniform2f(te.fluidTexel, 1 / M.width, 1 / M.height);
       const S = it();
       e.uniform4f(te.widgetRect, S[0], S[1], S[2], S[3]), e.uniform1f(te.elapsedTime, R), e.uniform1f(te.emitterDebug, n.current ? 1 : 0), e.uniform4f(te.emitterSeed, xe[0], xe[1], xe[2], xe[3]), e.drawArrays(e.TRIANGLES, 0, 6);
@@ -3709,7 +3709,7 @@ function Ts() {
       C || (_e(), Ue(ue + 1e3), ee.matches || (E = window.requestAnimationFrame(ea)));
     };
     return window.addEventListener("resize", _e), window.addEventListener("pointermove", Ze, { passive: !0 }), ke(), () => {
-      C = !0, window.cancelAnimationFrame(E), window.removeEventListener("resize", _e), window.removeEventListener("pointermove", Ze), I == null || I.forEach(j), _ == null || _.forEach(j), g == null || g.forEach(j), N && j(N), W && j(W), e.deleteBuffer(A), D();
+      C = !0, window.cancelAnimationFrame(E), window.removeEventListener("resize", _e), window.removeEventListener("pointermove", Ze), I == null || I.forEach(j), _ == null || _.forEach(j), g == null || g.forEach(j), N && j(N), O && j(O), e.deleteBuffer(A), D();
     };
   }, []), /* @__PURE__ */ h(gt, { children: [
     /* @__PURE__ */ o("div", { className: "aurora-backdrop", "aria-hidden": "true" }),
@@ -3747,7 +3747,7 @@ function br({
     ) : null
   ] }) });
 }
-function Es() {
+function Ms() {
   return /* @__PURE__ */ o("div", { className: "min-h-[100dvh] bg-[var(--page-bg)] text-[var(--ink)]", children: /* @__PURE__ */ h("div", { className: "mx-auto max-w-[1400px] px-5 pb-16 pt-8 md:px-8 md:pt-10", children: [
     /* @__PURE__ */ h("div", { className: "grid animate-pulse gap-10 lg:grid-cols-[minmax(0,1.18fr)_360px] lg:items-end", children: [
       /* @__PURE__ */ h("div", { className: "space-y-6", children: [
@@ -3934,7 +3934,7 @@ function wr({
     }
   );
 }
-function Ms({
+function Ns({
   activeArticleSlug: t,
   boardView: a,
   camera: n,
@@ -3959,9 +3959,9 @@ function Ms({
   onShowHiddenCompanies: Q,
   onToggleTimelineGrid: w,
   processedCompanies: P,
-  renderWindow: z,
+  renderWindow: Y,
   scrollContainerRef: k,
-  showTimelineGrid: O,
+  showTimelineGrid: B,
   stopPanning: q,
   summaryCompanies: Z,
   timelineStartDay: H,
@@ -3980,23 +3980,23 @@ function Ms({
     timelineHeight: g,
     timelineWidth: de,
     viewport: j
-  }), W = Dt(P, !1, 1, _), [X, J] = Ee(null), K = ne(null), ue = () => {
+  }), O = Dt(P, !1, 1, _), [W, J] = Ee(null), K = ne(null), ue = () => {
     K.current !== null && (window.clearTimeout(K.current), K.current = null);
   }, ee = (L) => {
     ue(), J(L);
   }, G = () => {
     ue(), J(null);
-  }, Y = () => {
+  }, X = () => {
     ue(), K.current = window.setTimeout(() => {
       J(null), K.current = null;
     }, 120);
   };
   Ce(() => () => ue(), []);
-  const V = W.find((L) => L.company.id === X) ?? null, fe = ce(116, 16, Math.max(16, j.width - 288 - 16)), be = V ? ce(
+  const V = O.find((L) => L.company.id === W) ?? null, fe = ce(116, 16, Math.max(16, j.width - 288 - 16)), be = V ? ce(
     (N.timelineY + V.y + V.height / 2 - n.y) * C,
     82,
     Math.max(82, j.height - 84)
-  ) : 0, B = qe(), ve = a.isDefault ? B.defaultBoardDescription : a.isEmpty ? B.emptyBoardDetail : a.isComposite ? B.compositeBoardDescription(a.label) : B.singleBoardDescription(a.label), Ke = N.timelineX + H * Ae, xe = de + mt;
+  ) : 0, z = qe(), ve = a.isDefault ? z.defaultBoardDescription : a.isEmpty ? z.emptyBoardDetail : a.isComposite ? z.compositeBoardDescription(a.label) : z.singleBoardDescription(a.label), Ke = N.timelineX + H * Ae, xe = de + mt;
   return /* @__PURE__ */ h("section", { className: "relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden", children: [
     /* @__PURE__ */ o("div", { className: "absolute left-5 top-5 z-40 [--category-expanded-width:40rem]", children: x }),
     /* @__PURE__ */ o(
@@ -4037,7 +4037,7 @@ function Ms({
                   },
                   children: [
                     /* @__PURE__ */ o("p", { className: "font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]", children: a.label }),
-                    /* @__PURE__ */ o("h1", { className: "mt-4 max-w-4xl text-5xl leading-none tracking-tighter text-[var(--ink)]", children: B.primaryHeading }),
+                    /* @__PURE__ */ o("h1", { className: "mt-4 max-w-4xl text-5xl leading-none tracking-tighter text-[var(--ink)]", children: z.primaryHeading }),
                     /* @__PURE__ */ o("p", { className: "mt-5 max-w-[68ch] text-base leading-7 text-[var(--ink-soft)]", children: ve })
                   ]
                 }
@@ -4056,8 +4056,8 @@ function Ms({
                     "--border-sheen-delay": "2.8s"
                   },
                   children: [
-                    /* @__PURE__ */ o("p", { className: "text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]", children: B.timelineNotesHeading }),
-                    /* @__PURE__ */ o("p", { className: "mt-4 text-sm leading-7 text-[var(--ink-soft)]", children: B.timelineInteractionNoteDesktop })
+                    /* @__PURE__ */ o("p", { className: "text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]", children: z.timelineNotesHeading }),
+                    /* @__PURE__ */ o("p", { className: "mt-4 text-sm leading-7 text-[var(--ink-soft)]", children: z.timelineInteractionNoteDesktop })
                   ]
                 }
               ),
@@ -4079,12 +4079,12 @@ function Ms({
                     /* @__PURE__ */ o(
                       yr,
                       {
-                        activeCompanyId: X,
-                        onCompanyBlur: Y,
+                        activeCompanyId: W,
+                        onCompanyBlur: X,
                         onCompanyFocus: ee,
                         onCompanyTap: ee,
                         railWidth: mt,
-                        rowLayouts: W,
+                        rowLayouts: O,
                         timelineWidth: de
                       }
                     ),
@@ -4107,7 +4107,7 @@ function Ms({
                             className: "relative",
                             style: { width: `${de}px`, minHeight: `${g}px` },
                             children: [
-                              O ? /* @__PURE__ */ h("div", { className: "pointer-events-none absolute inset-0", "data-timeline-grid": !0, children: [
+                              B ? /* @__PURE__ */ h("div", { className: "pointer-events-none absolute inset-0", "data-timeline-grid": !0, children: [
                                 D.map((L) => /* @__PURE__ */ o(
                                   "div",
                                   {
@@ -4150,7 +4150,7 @@ function Ms({
                                       {
                                         className: "timeline-map-screen-label inline-flex items-center gap-2 rounded-full border border-[var(--edge)] bg-[var(--surface-strong)] px-3 py-2 font-semibold uppercase tracking-[0.18em] text-[var(--ink)] shadow-[0_18px_40px_-24px_rgba(0,0,0,0.6)]",
                                         style: We(11),
-                                        children: B.todayLabel
+                                        children: z.todayLabel
                                       }
                                     ) }) })
                                   }
@@ -4173,10 +4173,10 @@ function Ms({
                                       companyIndex: Ze,
                                       currentGlobalDay: r,
                                       maxDays: m,
-                                      onCompanyBlur: Y,
+                                      onCompanyBlur: X,
                                       onCompanyFocus: ee,
                                       onModelSelect: re,
-                                      renderWindow: z,
+                                      renderWindow: Y,
                                       timelineStartDay: H,
                                       verticalScale: 1
                                     },
@@ -4207,15 +4207,15 @@ function Ms({
                   },
                   children: [
                     /* @__PURE__ */ h("p", { className: "text-sm leading-relaxed text-[var(--ink-soft)]", children: [
-                      B.latestDesktopLabel,
+                      z.latestDesktopLabel,
                       ": ",
-                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: (c == null ? void 0 : c.name) ?? B.latestUnavailable }),
+                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: (c == null ? void 0 : c.name) ?? z.latestUnavailable }),
                       " ",
                       "with ",
-                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: ((_e = c == null ? void 0 : c.latestRelease) == null ? void 0 : _e.name) ?? B.latestUnavailable }),
+                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: ((_e = c == null ? void 0 : c.latestRelease) == null ? void 0 : _e.name) ?? z.latestUnavailable }),
                       "."
                     ] }),
-                    /* @__PURE__ */ o("p", { className: "font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]", children: B.timezoneLabel })
+                    /* @__PURE__ */ o("p", { className: "font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]", children: z.timezoneLabel })
                   ]
                 }
               ),
@@ -4232,7 +4232,7 @@ function Ms({
                     width: `${N.contentCards.summaries.width}px`
                   },
                   children: [
-                    /* @__PURE__ */ o("p", { className: "mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]", children: B.recencyHeading }),
+                    /* @__PURE__ */ o("p", { className: "mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]", children: z.recencyHeading }),
                     /* @__PURE__ */ o("div", { className: "grid gap-4 md:grid-cols-2 xl:grid-cols-4", children: /* @__PURE__ */ o(He, { initial: !1, mode: "popLayout", children: Z.map((L, Ze) => /* @__PURE__ */ o(
                       vr,
                       {
@@ -4258,9 +4258,9 @@ function Ms({
         onCompanyHide: A,
         onCompanyMove: F,
         onPointerEnter: ue,
-        onPointerLeave: Y,
+        onPointerLeave: X,
         row: V,
-        rowCount: W.length,
+        rowCount: O.length,
         screenX: fe,
         screenY: be
       }
@@ -4279,27 +4279,27 @@ function Ms({
       /* @__PURE__ */ h(
         ht,
         {
-          label: O ? B.timelineGridHideLabel : B.timelineGridShowLabel,
+          label: B ? z.timelineGridHideLabel : z.timelineGridShowLabel,
           onClick: w,
-          pressed: O,
+          pressed: B,
           children: [
-            O ? /* @__PURE__ */ o(Yn, { className: "h-4 w-4", strokeWidth: 1.8 }) : /* @__PURE__ */ o(zn, { className: "h-4 w-4", strokeWidth: 1.8 }),
+            B ? /* @__PURE__ */ o(Yn, { className: "h-4 w-4", strokeWidth: 1.8 }) : /* @__PURE__ */ o(zn, { className: "h-4 w-4", strokeWidth: 1.8 }),
             /* @__PURE__ */ o("span", { children: "Grid" })
           ]
         }
       ),
-      /* @__PURE__ */ h(ht, { label: B.resetCameraLabel, onClick: se, children: [
+      /* @__PURE__ */ h(ht, { label: z.resetCameraLabel, onClick: se, children: [
         /* @__PURE__ */ o(Gt, { className: "h-4 w-4", strokeWidth: 1.8 }),
         /* @__PURE__ */ o("span", { children: "Reset" })
       ] }),
-      l > 0 ? /* @__PURE__ */ h(ht, { label: B.showHiddenLabel, onClick: Q, children: [
+      l > 0 ? /* @__PURE__ */ h(ht, { label: z.showHiddenLabel, onClick: Q, children: [
         /* @__PURE__ */ o(rt, { className: "h-4 w-4", strokeWidth: 1.8 }),
-        /* @__PURE__ */ o("span", { children: B.companyFiltersHeading })
+        /* @__PURE__ */ o("span", { children: z.companyFiltersHeading })
       ] }) : null
     ] })
   ] });
 }
-function Ns({
+function Ds({
   activeArticleSlug: t,
   boardView: a,
   camera: n,
@@ -4324,9 +4324,9 @@ function Ns({
   onShowHiddenCompanies: Q,
   onToggleTimelineGrid: w,
   processedCompanies: P,
-  renderWindow: z,
+  renderWindow: Y,
   scrollContainerRef: k,
-  showTimelineGrid: O,
+  showTimelineGrid: B,
   timelineStartDay: q,
   timelineWidth: Z,
   viewport: H,
@@ -4344,11 +4344,11 @@ function Ns({
     timelineHeight: I,
     timelineWidth: Z,
     viewport: H
-  }), g = Dt(P, !0, 1, C), [N, W] = Ee(null), X = (B) => W(B), J = () => W(null), K = g.find((B) => B.company.id === N) ?? null, ee = Math.max(16, Math.min(126, Math.max(16, H.width - 248 - 12))), G = K ? ce(
+  }), g = Dt(P, !0, 1, C), [N, O] = Ee(null), W = (z) => O(z), J = () => O(null), K = g.find((z) => z.company.id === N) ?? null, ee = Math.max(16, Math.min(126, Math.max(16, H.width - 248 - 12))), G = K ? ce(
     (_.timelineY + K.y + K.height / 2 - n.y) * le,
     98,
     Math.max(98, H.height - 104)
-  ) : 0, Y = qe(), V = a.isDefault ? Y.defaultBoardDescription : a.isEmpty ? Y.emptyBoardDetail : a.isComposite ? Y.compositeBoardDescriptionMobile(a.label) : Y.singleBoardDescriptionMobile(a.label), ie = _.timelineX + q * Ae, fe = Z + ft;
+  ) : 0, X = qe(), V = a.isDefault ? X.defaultBoardDescription : a.isEmpty ? X.emptyBoardDetail : a.isComposite ? X.compositeBoardDescriptionMobile(a.label) : X.singleBoardDescriptionMobile(a.label), ie = _.timelineX + q * Ae, fe = Z + ft;
   return /* @__PURE__ */ h("section", { className: "relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden", children: [
     /* @__PURE__ */ o("div", { className: "absolute left-3 top-3 z-40 [--category-expanded-width:min(20rem,calc(100vw-5rem))]", children: x }),
     /* @__PURE__ */ o(
@@ -4356,9 +4356,9 @@ function Ns({
       {
         ref: k,
         className: "absolute inset-0 touch-none overflow-hidden [overflow-anchor:none]",
-        onClickCapture: (B) => te(B.target, { clientX: B.clientX, clientY: B.clientY }),
-        onClick: (B) => {
-          const ve = B.target;
+        onClickCapture: (z) => te(z.target, { clientX: z.clientX, clientY: z.clientY }),
+        onClick: (z) => {
+          const ve = z.target;
           ve instanceof Element && (ve.closest("[data-row-focus-band], [data-row-focus-label], button, a, input, label, select, textarea") || J());
         },
         onTouchCancel: e,
@@ -4392,7 +4392,7 @@ function Ns({
                   },
                   children: [
                     /* @__PURE__ */ o("p", { className: "font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]", children: a.label }),
-                    /* @__PURE__ */ o("h1", { className: "mt-3 max-w-sm text-[2.25rem] leading-none tracking-tighter text-[var(--ink)]", children: Y.primaryHeading }),
+                    /* @__PURE__ */ o("h1", { className: "mt-3 max-w-sm text-[2.25rem] leading-none tracking-tighter text-[var(--ink)]", children: X.primaryHeading }),
                     /* @__PURE__ */ o("p", { className: "mt-4 text-sm leading-6 text-[var(--ink-soft)]", children: V })
                   ]
                 }
@@ -4411,8 +4411,8 @@ function Ns({
                     "--border-sheen-delay": "2.8s"
                   },
                   children: [
-                    /* @__PURE__ */ o("p", { className: "text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]", children: Y.timelineNotesHeading }),
-                    /* @__PURE__ */ o("p", { className: "mt-3 text-xs leading-5 text-[var(--ink-soft)]", children: Y.timelineInteractionNoteMobile })
+                    /* @__PURE__ */ o("p", { className: "text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]", children: X.timelineNotesHeading }),
+                    /* @__PURE__ */ o("p", { className: "mt-3 text-xs leading-5 text-[var(--ink-soft)]", children: X.timelineInteractionNoteMobile })
                   ]
                 }
               ),
@@ -4436,8 +4436,8 @@ function Ns({
                       {
                         activeCompanyId: N,
                         compact: !0,
-                        onCompanyFocus: X,
-                        onCompanyTap: X,
+                        onCompanyFocus: W,
+                        onCompanyTap: W,
                         railWidth: ft,
                         rowLayouts: g,
                         timelineWidth: Z
@@ -4462,38 +4462,38 @@ function Ns({
                             className: "relative",
                             style: { width: `${Z}px`, minHeight: `${I}px` },
                             children: [
-                              O ? /* @__PURE__ */ h("div", { className: "pointer-events-none absolute inset-0", "data-timeline-grid": !0, children: [
-                                D.map((B) => /* @__PURE__ */ o(
+                              B ? /* @__PURE__ */ h("div", { className: "pointer-events-none absolute inset-0", "data-timeline-grid": !0, children: [
+                                D.map((z) => /* @__PURE__ */ o(
                                   "div",
                                   {
                                     className: "absolute bottom-0 top-0 border-l border-[var(--grid-line)]",
-                                    style: { left: `${ze(B.days, q)}px` },
+                                    style: { left: `${ze(z.days, q)}px` },
                                     children: /* @__PURE__ */ o("div", { className: "absolute left-0 top-9 -translate-x-1/2", children: /* @__PURE__ */ o("div", { className: "timeline-map-screen-fixed", children: /* @__PURE__ */ o(
                                       "div",
                                       {
                                         className: "timeline-map-screen-label rounded-full bg-[var(--surface-strong)] px-2 py-1 font-medium uppercase tracking-[0.16em] text-[var(--muted)] shadow-[var(--soft-shadow)]",
                                         style: We(9),
-                                        children: B.label
+                                        children: z.label
                                       }
                                     ) }) })
                                   },
-                                  `mobile-month-${B.days}`
+                                  `mobile-month-${z.days}`
                                 )),
-                                j.map((B) => /* @__PURE__ */ o(
+                                j.map((z) => /* @__PURE__ */ o(
                                   "div",
                                   {
                                     className: "absolute bottom-0 top-0 border-l-2 border-[var(--grid-line-strong)]",
-                                    style: { left: `${ze(B.days, q)}px` },
+                                    style: { left: `${ze(z.days, q)}px` },
                                     children: /* @__PURE__ */ o("div", { className: "absolute left-0 top-1 -translate-x-1/2", children: /* @__PURE__ */ o("div", { className: "timeline-map-screen-fixed", children: /* @__PURE__ */ o(
                                       "div",
                                       {
                                         className: "timeline-map-screen-label rounded-full border border-[var(--edge)] bg-[var(--surface-strong)] px-2.5 py-1 font-semibold uppercase tracking-[0.16em] text-[var(--ink-soft)] shadow-[var(--soft-shadow)]",
                                         style: We(10),
-                                        children: B.label
+                                        children: z.label
                                       }
                                     ) }) })
                                   },
-                                  `mobile-year-${B.label}`
+                                  `mobile-year-${z.label}`
                                 )),
                                 /* @__PURE__ */ o(
                                   "div",
@@ -4505,7 +4505,7 @@ function Ns({
                                       {
                                         className: "timeline-map-screen-label inline-flex items-center rounded-full border border-[var(--edge)] bg-[var(--surface-strong)] px-2.5 py-1.5 font-semibold uppercase tracking-[0.16em] text-[var(--ink)] shadow-[0_18px_40px_-24px_rgba(0,0,0,0.6)]",
                                         style: We(10),
-                                        children: Y.todayLabel
+                                        children: X.todayLabel
                                       }
                                     ) }) })
                                   }
@@ -4520,22 +4520,22 @@ function Ns({
                                     paddingBottom: `${C.bottomPadding}px`,
                                     paddingTop: `${C.topPadding}px`
                                   },
-                                  children: /* @__PURE__ */ o(He, { initial: !1, mode: "popLayout", children: P.map((B, ve) => /* @__PURE__ */ o(
+                                  children: /* @__PURE__ */ o(He, { initial: !1, mode: "popLayout", children: P.map((z, ve) => /* @__PURE__ */ o(
                                     gr,
                                     {
                                       activeArticleSlug: t,
                                       compact: !0,
-                                      company: B,
+                                      company: z,
                                       companyIndex: ve,
                                       currentGlobalDay: r,
                                       maxDays: y,
-                                      onCompanyFocus: X,
+                                      onCompanyFocus: W,
                                       onModelSelect: re,
-                                      renderWindow: z,
+                                      renderWindow: Y,
                                       timelineStartDay: q,
                                       verticalScale: 1
                                     },
-                                    B.id
+                                    z.id
                                   )) })
                                 }
                               ) : null,
@@ -4562,15 +4562,15 @@ function Ns({
                   },
                   children: [
                     /* @__PURE__ */ h("p", { className: "text-xs leading-5 text-[var(--ink-soft)]", children: [
-                      Y.latestMobileLabel,
+                      X.latestMobileLabel,
                       ": ",
-                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: (c == null ? void 0 : c.name) ?? Y.latestUnavailable }),
+                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: (c == null ? void 0 : c.name) ?? X.latestUnavailable }),
                       " ",
                       "with ",
-                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: ((be = c == null ? void 0 : c.latestRelease) == null ? void 0 : be.name) ?? Y.latestUnavailable }),
+                      /* @__PURE__ */ o("span", { className: "font-semibold text-[var(--ink)]", children: ((be = c == null ? void 0 : c.latestRelease) == null ? void 0 : be.name) ?? X.latestUnavailable }),
                       "."
                     ] }),
-                    /* @__PURE__ */ o("p", { className: "mt-2 font-mono text-[9px] uppercase tracking-[0.13em] text-[var(--muted)]", children: Y.timezoneLabel })
+                    /* @__PURE__ */ o("p", { className: "mt-2 font-mono text-[9px] uppercase tracking-[0.13em] text-[var(--muted)]", children: X.timezoneLabel })
                   ]
                 }
               ),
@@ -4587,17 +4587,17 @@ function Ns({
                     width: `${_.contentCards.summaries.width}px`
                   },
                   children: [
-                    /* @__PURE__ */ o("p", { className: "mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]", children: Y.recencyHeading }),
-                    /* @__PURE__ */ o("div", { className: "grid gap-3 sm:grid-cols-2", children: /* @__PURE__ */ o(He, { initial: !1, mode: "popLayout", children: P.map((B, ve) => /* @__PURE__ */ o(
+                    /* @__PURE__ */ o("p", { className: "mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]", children: X.recencyHeading }),
+                    /* @__PURE__ */ o("div", { className: "grid gap-3 sm:grid-cols-2", children: /* @__PURE__ */ o(He, { initial: !1, mode: "popLayout", children: P.map((z, ve) => /* @__PURE__ */ o(
                       vr,
                       {
                         compact: !0,
-                        company: B,
+                        company: z,
                         currentGlobalDay: r,
                         index: ve,
                         maxSummaryQuietDays: b
                       },
-                      B.id
+                      z.id
                     )) }) })
                   ]
                 }
@@ -4635,33 +4635,33 @@ function Ns({
       /* @__PURE__ */ h(
         ht,
         {
-          label: O ? Y.timelineGridHideLabel : Y.timelineGridShowLabel,
+          label: B ? X.timelineGridHideLabel : X.timelineGridShowLabel,
           onClick: w,
-          pressed: O,
+          pressed: B,
           children: [
-            O ? /* @__PURE__ */ o(Yn, { className: "h-4 w-4", strokeWidth: 1.8 }) : /* @__PURE__ */ o(zn, { className: "h-4 w-4", strokeWidth: 1.8 }),
+            B ? /* @__PURE__ */ o(Yn, { className: "h-4 w-4", strokeWidth: 1.8 }) : /* @__PURE__ */ o(zn, { className: "h-4 w-4", strokeWidth: 1.8 }),
             /* @__PURE__ */ o("span", { className: "sr-only", children: "Grid" })
           ]
         }
       ),
-      /* @__PURE__ */ h(ht, { label: Y.resetCameraLabel, onClick: se, children: [
+      /* @__PURE__ */ h(ht, { label: X.resetCameraLabel, onClick: se, children: [
         /* @__PURE__ */ o(Gt, { className: "h-4 w-4", strokeWidth: 1.8 }),
         /* @__PURE__ */ o("span", { className: "sr-only", children: "Reset" })
       ] }),
-      f > 0 ? /* @__PURE__ */ h(ht, { label: Y.showHiddenLabel, onClick: Q, children: [
+      f > 0 ? /* @__PURE__ */ h(ht, { label: X.showHiddenLabel, onClick: Q, children: [
         /* @__PURE__ */ o(rt, { className: "h-4 w-4", strokeWidth: 1.8 }),
-        /* @__PURE__ */ o("span", { className: "sr-only", children: Y.companyFiltersHeading })
+        /* @__PURE__ */ o("span", { className: "sr-only", children: X.companyFiltersHeading })
       ] }) : null
     ] })
   ] });
 }
-function Ls({ definition: t }) {
+function _s({ definition: t }) {
   po(t);
   const [a, n] = Ee(() => ai()), [r, e] = Ee(() => ni()), [s, l] = Ee(
     () => ri()
   ), [d, f] = Ee(!1), [c, m] = Ee(
     () => typeof window > "u" ? !0 : window.matchMedia("(min-width: 768px)").matches
-  ), [v, y] = Ee(Yt), [b, x] = Ee(zt), [D, A] = Ee(!1), [F, te] = Ee(!1), [re, se] = Ee(!0), [Q, w] = Ee([]), [P, z] = Ee(() => Ye().map((i) => i.id)), [k, O] = Ee({ x: 0, y: 0 }), [q, Z] = Ee({ x: 0, y: 0 }), [H, de] = Ee(() => ti()), j = ne(Yt), le = ne(zt), E = ne({ x: 0, y: 0 }), C = ne({ x: 0, y: 0 }), I = ne({
+  ), [v, y] = Ee(Yt), [b, x] = Ee(zt), [D, A] = Ee(!1), [F, te] = Ee(!1), [re, se] = Ee(!0), [Q, w] = Ee([]), [P, Y] = Ee(() => Ye().map((i) => i.id)), [k, B] = Ee({ x: 0, y: 0 }), [q, Z] = Ee({ x: 0, y: 0 }), [H, de] = Ee(() => ti()), j = ne(Yt), le = ne(zt), E = ne({ x: 0, y: 0 }), C = ne({ x: 0, y: 0 }), I = ne({
     frameId: null,
     lastFrameAt: null,
     stiffness: lt,
@@ -4679,7 +4679,7 @@ function Ls({ definition: t }) {
       zoom: zt
     },
     zoomAnchor: null
-  }), g = ne(null), N = ne(null), W = ne(null), X = ne(null), J = ne(null), K = ne(null), ue = ne(null), ee = ne(null), G = ne(!1), Y = ne(!1), V = ne(null), ie = ne(null), fe = ne(!1), be = ne(null), B = ne(() => {
+  }), g = ne(null), N = ne(null), O = ne(null), W = ne(null), J = ne(null), K = ne(null), ue = ne(null), ee = ne(null), G = ne(!1), X = ne(!1), V = ne(null), ie = ne(null), fe = ne(!1), be = ne(null), z = ne(() => {
   }), ve = ne(null), Ke = ne(null), xe = ne({
     lastX: 0,
     lastY: 0,
@@ -4875,15 +4875,15 @@ function Ls({ definition: t }) {
     if (i(), !G.current)
       return window.addEventListener("resize", i), () => window.removeEventListener("resize", i);
   }, [Je, L.desktop, v]), Ce(() => {
-    if (Y.current)
+    if (X.current)
       return;
     const i = () => {
-      if (Y.current || !N.current || N.current.clientWidth === 0)
+      if (X.current || !N.current || N.current.clientWidth === 0)
         return;
       const p = $t(et, !0);
-      C.current = p.camera, _.current.target = p, sa(p.zoom, p.camera), Y.current = !0;
+      C.current = p.camera, _.current.target = p, sa(p.zoom, p.camera), X.current = !0;
     };
-    if (i(), !Y.current)
+    if (i(), !X.current)
       return window.addEventListener("resize", i), () => window.removeEventListener("resize", i);
   }, [et, b, L.mobile]);
   const Rr = (i) => {
@@ -4906,7 +4906,7 @@ function Ls({ definition: t }) {
   }, Ir = () => {
     n((i) => ({ ...i, companyIds: [] }));
   }, Lr = () => {
-    n(vt()), e(Kt()), l(Zt()), w([]), z(Ye().map((i) => i.id));
+    n(vt()), e(Kt()), l(Zt()), w([]), Y(Ye().map((i) => i.id));
   }, _r = () => {
     n({
       attributeIds: [],
@@ -4928,7 +4928,7 @@ function Ls({ definition: t }) {
   }, Va = ln(() => {
     se((i) => !i);
   }, []), Ga = (i, u) => {
-    z((p) => Mi(p, oe, i, u));
+    Y((p) => Mi(p, oe, i, u));
   }, ja = () => {
     window.location.hash = ga({
       companySortMode: r,
@@ -4979,9 +4979,9 @@ function Ls({ definition: t }) {
     totalMatchedCompanyCount: $.length,
     visibleCompanyCount: S.length
   }, ia = (i, u) => {
-    j.current = i, E.current = u, Ut(W.current, u, i), y(i), O(u);
+    j.current = i, E.current = u, Ut(O.current, u, i), y(i), B(u);
   }, sa = (i, u) => {
-    le.current = i, C.current = u, Ut(X.current, u, i), x(i), Z(u);
+    le.current = i, C.current = u, Ut(W.current, u, i), x(i), Z(u);
   }, Za = (i) => {
     const u = I.current, p = u.lastFrameAt === null ? 1 / 60 : ce((i - u.lastFrameAt) / 1e3, 0, 0.064);
     u.lastFrameAt = i;
@@ -5238,7 +5238,7 @@ function Ls({ definition: t }) {
       { zoomAnchor: Ne }
     );
   };
-  B.current = (i) => {
+  z.current = (i) => {
     if (!g.current || i.deltaY === 0)
       return;
     i.cancelable && i.preventDefault();
@@ -5258,7 +5258,7 @@ function Ls({ definition: t }) {
     const i = g.current;
     if (!i)
       return;
-    const u = (p) => B.current(p);
+    const u = (p) => z.current(p);
     return i.addEventListener("wheel", u, { passive: !1 }), () => {
       i.removeEventListener("wheel", u);
     };
@@ -5274,7 +5274,7 @@ function Ls({ definition: t }) {
       startX: i.clientX,
       startY: i.clientY
     }, u.setPointerCapture(i.pointerId), (U = ve.current) == null || U.call(ve);
-    const T = (ae) => B.current(ae);
+    const T = (ae) => z.current(ae);
     window.addEventListener("wheel", T, { capture: !0, passive: !1 }), ve.current = () => {
       window.removeEventListener("wheel", T, !0);
     }, Xn(() => A(!0)), i.preventDefault();
@@ -5293,7 +5293,7 @@ function Ls({ definition: t }) {
     I.current.target = {
       camera: he,
       zoom: j.current
-    }, E.current = he, Ut(W.current, he, j.current), xe.current.lastX = i.clientX, xe.current.lastY = i.clientY;
+    }, E.current = he, Ut(O.current, he, j.current), xe.current.lastX = i.clientX, xe.current.lastY = i.clientY;
   }, Br = (i) => {
     if (i.pointerType === "mouse" && g.current) {
       const u = g.current.getBoundingClientRect();
@@ -5323,7 +5323,7 @@ function Ls({ definition: t }) {
       ye,
       oa,
       { clientX: i.clientX, clientY: i.clientY }
-    ), O(E.current), A(!1);
+    ), B(E.current), A(!1);
   }, an = (i, u) => Math.hypot(u.clientX - i.clientX, u.clientY - i.clientY), nn = (i, u) => ({
     clientX: (i.clientX + u.clientX) / 2,
     clientY: (i.clientY + u.clientY) / 2
@@ -5338,7 +5338,7 @@ function Ls({ definition: t }) {
     _.current.target = {
       camera: p,
       zoom: le.current
-    }, C.current = p, Ut(X.current, p, le.current);
+    }, C.current = p, Ut(W.current, p, le.current);
   }, sn = (i) => i instanceof Element && !i.closest("[data-timeline-pin]") && !!i.closest("button, a, input, label, select, textarea, [data-row-focus-label]"), st = (i) => ({
     clientX: i.clientX,
     clientY: i.clientY
@@ -5431,10 +5431,10 @@ function Ls({ definition: t }) {
       detail: it.timelineStatusDataErrorDetail(pe.invalidEntries)
     }
   ) : F ? /* @__PURE__ */ h("div", { className: "relative isolate min-h-[100dvh] overflow-hidden bg-[var(--page-bg)] text-[var(--ink)] selection:bg-emerald-500/25 selection:text-[var(--ink)]", children: [
-    /* @__PURE__ */ o(Ts, {}),
+    /* @__PURE__ */ o(Es, {}),
     /* @__PURE__ */ h("div", { className: "relative z-10", children: [
       c ? null : /* @__PURE__ */ o("div", { className: "md:hidden", children: /* @__PURE__ */ o(
-        Ns,
+        Ds,
         {
           activeArticleSlug: ye,
           boardView: R,
@@ -5466,13 +5466,13 @@ function Ls({ definition: t }) {
           timelineStartDay: kt,
           timelineWidth: aa,
           viewport: L.mobile,
-          worldRef: X,
+          worldRef: W,
           yearTicks: Cr,
           zoom: b
         }
       ) }),
       c ? /* @__PURE__ */ o("div", { className: "hidden md:block", children: /* @__PURE__ */ o(
-        Ms,
+        Ns,
         {
           activeArticleSlug: ye,
           boardView: R,
@@ -5506,14 +5506,14 @@ function Ls({ definition: t }) {
           timelineStartDay: St,
           timelineWidth: ta,
           viewport: L.desktop,
-          worldRef: W,
+          worldRef: O,
           yearTicks: Nr,
           zoom: v
         }
       ) }) : null
     ] }),
     /* @__PURE__ */ o(He, { children: Ue ? /* @__PURE__ */ o(
-      ms,
+      fs,
       {
         entry: Re,
         onBack: ja,
@@ -5521,16 +5521,16 @@ function Ls({ definition: t }) {
         requestedSlug: ye ?? ""
       }
     ) : null })
-  ] }) : /* @__PURE__ */ o(Es, {});
+  ] }) : /* @__PURE__ */ o(Ms, {});
 }
 export {
   mo as DAY_MS,
-  Ls as TimelineExperience,
-  Is as buildTimelineArticleIndex,
+  _s as TimelineExperience,
+  Ls as buildTimelineArticleIndex,
   fo as createTimelineItemSlug,
   Ie as formatTimelineDate,
   Hn as formatTimelineDateRange,
   Vn as getTimelineItemSlug,
-  ks as indexTimelineArticles,
+  Is as indexTimelineArticles,
   Le as parseTimelineDate
 };

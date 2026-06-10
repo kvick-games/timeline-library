@@ -3956,10 +3956,11 @@ const FRACTAL_BAILOUT_RADIUS_SQUARED = 4096;
 // own equipotential bands — the reveal front crawls along the spiral arms
 // toward the set (which lights up last) while the mirage dissolves under it.
 const FRACTAL_BASE_SCALE = 8;
-const FRACTAL_PIXELS_PER_FRAME = 5200;
-const FRACTAL_BASE_FADE_FRAMES = 16;
-const FRACTAL_REVEAL_FRAMES = 190;
-const FRACTAL_REVEAL_FEATHER = 0.07;
+const FRACTAL_PIXELS_PER_FRAME = 12000;
+const FRACTAL_BASE_FADE_FRAMES = 10;
+const FRACTAL_REVEAL_FRAMES = 70;
+const FRACTAL_REVEAL_FEATHER = 0.09;
+const FRACTAL_EMBER_STRENGTH = 0.35;
 
 function hashFractalSeed(value: string) {
   let hash = 0x811c9dc5;
@@ -4198,8 +4199,9 @@ function ArticleFractalBackdrop({accent, seedKey}: {accent: string; seedKey: str
     const fullAlpha = new Uint8ClampedArray(pixelCount);
     const fullShaped = new Float32Array(pixelCount);
 
-    const easeInOutCubic = (t: number) =>
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // Ease-out so the sweep is visibly moving the moment it starts and only
+    // decelerates into the fine boundary detail at the end.
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
     let cancelled = false;
     let frameHandle = 0;
@@ -4277,25 +4279,25 @@ function ArticleFractalBackdrop({accent, seedKey}: {accent: string; seedKey: str
       revealFrame += 1;
       const progress = Math.min(1, revealFrame / FRACTAL_REVEAL_FRAMES);
       // Push the front past 1 + feather so every pixel fully saturates.
-      const front = easeInOutCubic(progress) * (1 + FRACTAL_REVEAL_FEATHER * 2);
+      const front = easeOutCubic(progress) * (1 + FRACTAL_REVEAL_FEATHER * 2);
       const pixels = revealImage.data;
 
       for (let index = 0; index < pixelCount; index += 1) {
         const arrival = (front - fullShaped[index]) / FRACTAL_REVEAL_FEATHER;
         const visibility = arrival <= 0 ? 0 : arrival >= 1 ? 1 : arrival;
-        // The leading edge of the front glows like an ember as it travels
-        // along the equipotential bands that wrap the spiral arms.
-        const ember = visibility * (1 - visibility) * 2;
+        // The leading edge of the front shimmers faintly as it travels along
+        // the equipotential bands that wrap the spiral arms.
+        const ember = visibility * (1 - visibility) * 2 * FRACTAL_EMBER_STRENGTH;
         const offset = index * 4;
         pixels[offset] = fullRgb[index * 3] + (emberRgb[0] - fullRgb[index * 3]) * ember;
         pixels[offset + 1] = fullRgb[index * 3 + 1] + (emberRgb[1] - fullRgb[index * 3 + 1]) * ember;
         pixels[offset + 2] = fullRgb[index * 3 + 2] + (emberRgb[2] - fullRgb[index * 3 + 2]) * ember;
-        pixels[offset + 3] = fullAlpha[index] * visibility + ember * 70;
+        pixels[offset + 3] = fullAlpha[index] * visibility + ember * 30;
       }
 
       revealContext.putImageData(revealImage, 0, 0);
       context.clearRect(0, 0, width, height);
-      const baseOpacity = 1 - easeInOutCubic(progress);
+      const baseOpacity = 1 - easeOutCubic(progress);
       if (baseOpacity > 0.003) {
         context.globalAlpha = baseOpacity;
         context.drawImage(baseCanvas, 0, 0, width, height);
