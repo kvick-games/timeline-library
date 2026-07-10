@@ -20,6 +20,7 @@ export type TimelineExperienceFocusOptions = {
         x: number;
         y: number;
     };
+    durationMs?: number;
     maxZoom?: number;
     stiffness?: number;
 };

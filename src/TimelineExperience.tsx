@@ -84,6 +84,7 @@ export type TimelineExperienceFocusTarget =
 
 export type TimelineExperienceFocusOptions = {
   anchor?: {x: number; y: number};
+  durationMs?: number;
   maxZoom?: number;
   stiffness?: number;
 };
@@ -436,14 +437,18 @@ type ZoomInterpolationAnchor = {
 
 type CameraInterpolationState = {
   complete: ((result: TimelineExperienceTransitionResult) => void) | null;
+  durationMs: number | null;
   frameId: number | null;
   lastFrameAt: number | null;
+  start: CameraViewState;
+  startedAt: number | null;
   stiffness: number;
   target: CameraViewState;
   zoomAnchor: ZoomInterpolationAnchor | null;
 };
 
 type CameraTargetOptions = {
+  durationMs?: number;
   stiffness?: number;
   zoomAnchor?: ZoomInterpolationAnchor | null;
 };
@@ -7492,8 +7497,14 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
   const mobileCameraRef = useRef<CameraState>({x: 0, y: 0});
   const desktopCameraInterpolationRef = useRef<CameraInterpolationState>({
     complete: null,
+    durationMs: null,
     frameId: null,
     lastFrameAt: null,
+    start: {
+      camera: {x: 0, y: 0},
+      zoom: DEFAULT_DESKTOP_ZOOM,
+    },
+    startedAt: null,
     stiffness: CAMERA_TARGET_INTERPOLATION_STIFFNESS,
     target: {
       camera: {x: 0, y: 0},
@@ -7503,8 +7514,14 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
   });
   const mobileCameraInterpolationRef = useRef<CameraInterpolationState>({
     complete: null,
+    durationMs: null,
     frameId: null,
     lastFrameAt: null,
+    start: {
+      camera: {x: 0, y: 0},
+      zoom: DEFAULT_MOBILE_ZOOM,
+    },
+    startedAt: null,
     stiffness: CAMERA_TARGET_INTERPOLATION_STIFFNESS,
     target: {
       camera: {x: 0, y: 0},
@@ -8089,8 +8106,18 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
     interpolation.lastFrameAt = timestamp;
 
     const {target, zoomAnchor} = interpolation;
-    const alpha = 1 - Math.exp(-interpolation.stiffness * deltaSeconds);
-    const nextZoom = lerpNumber(zoomRef.current, target.zoom, alpha);
+    if (interpolation.durationMs !== null && interpolation.startedAt === null) {
+      interpolation.startedAt = timestamp;
+    }
+    const timedProgress = interpolation.durationMs === null
+      ? null
+      : clampNumber((timestamp - (interpolation.startedAt ?? timestamp)) / interpolation.durationMs, 0, 1);
+    const alpha = timedProgress === null
+      ? 1 - Math.exp(-interpolation.stiffness * deltaSeconds)
+      : timedProgress * timedProgress * timedProgress * (timedProgress * (timedProgress * 6 - 15) + 10);
+    const sourceZoom = timedProgress === null ? zoomRef.current : interpolation.start.zoom;
+    const sourceCamera = timedProgress === null ? desktopCameraRef.current : interpolation.start.camera;
+    const nextZoom = lerpNumber(sourceZoom, target.zoom, alpha);
     const nextCamera = zoomAnchor
       ? getCameraForZoomWorldAnchor(
           zoomAnchor.worldX,
@@ -8100,8 +8127,8 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
           nextZoom,
         )
       : {
-          x: lerpNumber(desktopCameraRef.current.x, target.camera.x, alpha),
-          y: lerpNumber(desktopCameraRef.current.y, target.camera.y, alpha),
+          x: lerpNumber(sourceCamera.x, target.camera.x, alpha),
+          y: lerpNumber(sourceCamera.y, target.camera.y, alpha),
         };
 
     commitDesktopCameraZoomState(nextZoom, nextCamera);
@@ -8109,13 +8136,17 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
     const cameraDistance = Math.hypot(target.camera.x - nextCamera.x, target.camera.y - nextCamera.y);
     const zoomDistance = Math.abs(target.zoom - nextZoom);
 
-    if (cameraDistance > CAMERA_TARGET_SNAP_DISTANCE || zoomDistance > CAMERA_TARGET_SNAP_ZOOM) {
+    if (timedProgress !== null
+      ? timedProgress < 1
+      : cameraDistance > CAMERA_TARGET_SNAP_DISTANCE || zoomDistance > CAMERA_TARGET_SNAP_ZOOM) {
       interpolation.frameId = window.requestAnimationFrame(runDesktopCameraInterpolationFrame);
       return;
     }
 
+    interpolation.durationMs = null;
     interpolation.frameId = null;
     interpolation.lastFrameAt = null;
+    interpolation.startedAt = null;
     const snappedCamera = zoomAnchor
       ? getCameraForZoomWorldAnchor(
           zoomAnchor.worldX,
@@ -8140,8 +8171,18 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
     interpolation.lastFrameAt = timestamp;
 
     const {target, zoomAnchor} = interpolation;
-    const alpha = 1 - Math.exp(-interpolation.stiffness * deltaSeconds);
-    const nextZoom = lerpNumber(mobileZoomRef.current, target.zoom, alpha);
+    if (interpolation.durationMs !== null && interpolation.startedAt === null) {
+      interpolation.startedAt = timestamp;
+    }
+    const timedProgress = interpolation.durationMs === null
+      ? null
+      : clampNumber((timestamp - (interpolation.startedAt ?? timestamp)) / interpolation.durationMs, 0, 1);
+    const alpha = timedProgress === null
+      ? 1 - Math.exp(-interpolation.stiffness * deltaSeconds)
+      : timedProgress * timedProgress * timedProgress * (timedProgress * (timedProgress * 6 - 15) + 10);
+    const sourceZoom = timedProgress === null ? mobileZoomRef.current : interpolation.start.zoom;
+    const sourceCamera = timedProgress === null ? mobileCameraRef.current : interpolation.start.camera;
+    const nextZoom = lerpNumber(sourceZoom, target.zoom, alpha);
     const nextCamera = zoomAnchor
       ? getCameraForZoomWorldAnchor(
           zoomAnchor.worldX,
@@ -8151,8 +8192,8 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
           nextZoom,
         )
       : {
-          x: lerpNumber(mobileCameraRef.current.x, target.camera.x, alpha),
-          y: lerpNumber(mobileCameraRef.current.y, target.camera.y, alpha),
+          x: lerpNumber(sourceCamera.x, target.camera.x, alpha),
+          y: lerpNumber(sourceCamera.y, target.camera.y, alpha),
         };
 
     commitMobileCameraZoomState(nextZoom, nextCamera);
@@ -8160,13 +8201,17 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
     const cameraDistance = Math.hypot(target.camera.x - nextCamera.x, target.camera.y - nextCamera.y);
     const zoomDistance = Math.abs(target.zoom - nextZoom);
 
-    if (cameraDistance > CAMERA_TARGET_SNAP_DISTANCE || zoomDistance > CAMERA_TARGET_SNAP_ZOOM) {
+    if (timedProgress !== null
+      ? timedProgress < 1
+      : cameraDistance > CAMERA_TARGET_SNAP_DISTANCE || zoomDistance > CAMERA_TARGET_SNAP_ZOOM) {
       interpolation.frameId = window.requestAnimationFrame(runMobileCameraInterpolationFrame);
       return;
     }
 
+    interpolation.durationMs = null;
     interpolation.frameId = null;
     interpolation.lastFrameAt = null;
+    interpolation.startedAt = null;
     const snappedCamera = zoomAnchor
       ? getCameraForZoomWorldAnchor(
           zoomAnchor.worldX,
@@ -8185,6 +8230,14 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
   const setDesktopCameraTarget = (target: CameraViewState, options?: CameraTargetOptions) => {
     const interpolation = desktopCameraInterpolationRef.current;
     interpolation.complete?.('cancelled');
+    interpolation.durationMs = options?.durationMs === undefined
+      ? null
+      : clampNumber(options.durationMs, 120, 5000);
+    interpolation.start = {
+      camera: {...desktopCameraRef.current},
+      zoom: zoomRef.current,
+    };
+    interpolation.startedAt = null;
     interpolation.target = target;
     interpolation.stiffness = options?.stiffness ?? CAMERA_TARGET_INTERPOLATION_STIFFNESS;
 
@@ -8207,6 +8260,14 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
   const setMobileCameraTarget = (target: CameraViewState, options?: CameraTargetOptions) => {
     const interpolation = mobileCameraInterpolationRef.current;
     interpolation.complete?.('cancelled');
+    interpolation.durationMs = options?.durationMs === undefined
+      ? null
+      : clampNumber(options.durationMs, 120, 5000);
+    interpolation.start = {
+      camera: {...mobileCameraRef.current},
+      zoom: mobileZoomRef.current,
+    };
+    interpolation.startedAt = null;
     interpolation.target = target;
     interpolation.stiffness = options?.stiffness ?? CAMERA_TARGET_INTERPOLATION_STIFFNESS;
 
@@ -8278,6 +8339,7 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
       }
 
       const targetOptions: CameraTargetOptions = {
+        durationMs: options?.durationMs,
         stiffness:
           options?.stiffness ??
           (target.kind === 'slug' ? MODEL_FOCUS_CAMERA_INTERPOLATION_STIFFNESS : CAMERA_TARGET_INTERPOLATION_STIFFNESS),
@@ -8311,8 +8373,10 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
       }
       interpolation.complete?.('cancelled');
       interpolation.complete = null;
+      interpolation.durationMs = null;
       interpolation.frameId = null;
       interpolation.lastFrameAt = null;
+      interpolation.startedAt = null;
       interpolation.zoomAnchor = null;
     });
 
@@ -8366,16 +8430,24 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
           }
           interpolation.complete?.('cancelled');
           interpolation.complete = null;
+          interpolation.durationMs = null;
           interpolation.frameId = null;
           interpolation.lastFrameAt = null;
+          interpolation.startedAt = null;
           interpolation.zoomAnchor = null;
         });
       },
       focus(target, options) {
         if (target.kind === 'default') {
           return isDesktopViewport
-            ? setDesktopCameraTarget(getDefaultCameraView(desktopCanvasLayout), {stiffness: options?.stiffness})
-            : setMobileCameraTarget(getDefaultCameraView(mobileCanvasLayout, true), {stiffness: options?.stiffness});
+            ? setDesktopCameraTarget(getDefaultCameraView(desktopCanvasLayout), {
+                durationMs: options?.durationMs,
+                stiffness: options?.stiffness,
+              })
+            : setMobileCameraTarget(getDefaultCameraView(mobileCanvasLayout, true), {
+                durationMs: options?.durationMs,
+                stiffness: options?.stiffness,
+              });
         }
 
         return jumpToTimelineRegion(target, options);
@@ -8552,7 +8624,9 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
       interpolation.frameId = null;
     }
 
+    interpolation.durationMs = null;
     interpolation.lastFrameAt = null;
+    interpolation.startedAt = null;
     interpolation.target = {
       camera: desktopCameraRef.current,
       zoom: zoomRef.current,
@@ -8572,7 +8646,9 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
       interpolation.frameId = null;
     }
 
+    interpolation.durationMs = null;
     interpolation.lastFrameAt = null;
+    interpolation.startedAt = null;
     interpolation.target = {
       camera: mobileCameraRef.current,
       zoom: mobileZoomRef.current,
