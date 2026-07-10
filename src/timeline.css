@@ -415,3 +415,7 @@ body::before {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(147, 160, 184, 0.42);
 }
+
+[data-timeline-presentation] [data-timeline-presentation-hide] {
+  display: none !important;
+}

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from 'react';
 import {flushSync} from 'react-dom';
 import {
   ArrowDown,
@@ -73,8 +73,53 @@ type CompanyFilterOption = {
   releaseCount: number;
 };
 
+export type TimelineExperienceRoute =
+  | {kind: 'timeline'}
+  | {kind: 'model'; slug: string};
+
+export type TimelineExperienceFocusTarget =
+  | {kind: 'default'}
+  | {kind: 'slug'; slug: string}
+  | {kind: 'slugs'; slugs: string[]};
+
+export type TimelineExperienceFocusOptions = {
+  maxZoom?: number;
+  stiffness?: number;
+};
+
+export type TimelineExperienceTransitionResult = 'completed' | 'cancelled' | 'unavailable';
+
+export type TimelineExperienceState = {
+  companyOrderIds: string[];
+  companySortMode: CompanySortMode;
+  desktopCamera: CameraState;
+  desktopZoom: number;
+  filterState: TimelineFilterState;
+  hiddenCompanyIds: string[];
+  mobileCamera: CameraState;
+  mobileZoom: number;
+  route: TimelineExperienceRoute;
+  showTimelineGrid: boolean;
+  significanceDisplayLimit: SignificanceDisplayLimit;
+};
+
+export type TimelineExperienceStatePatch = Partial<TimelineExperienceState>;
+
+export type TimelineExperienceController = {
+  cancelFocus: () => void;
+  focus: (
+    target: TimelineExperienceFocusTarget,
+    options?: TimelineExperienceFocusOptions,
+  ) => Promise<TimelineExperienceTransitionResult>;
+  getState: () => TimelineExperienceState;
+  restoreState: (state: TimelineExperienceState) => Promise<void>;
+  setState: (state: TimelineExperienceStatePatch) => Promise<void>;
+};
+
 export type TimelineExperienceProps = {
+  controllerRef?: React.Ref<TimelineExperienceController>;
   definition: TimelineDefinition;
+  presentation?: boolean;
 };
 
 let activeTimelineDefinition: TimelineDefinition | null = null;
@@ -389,6 +434,7 @@ type ZoomInterpolationAnchor = {
 };
 
 type CameraInterpolationState = {
+  complete: ((result: TimelineExperienceTransitionResult) => void) | null;
   frameId: number | null;
   lastFrameAt: number | null;
   stiffness: number;
@@ -448,7 +494,8 @@ type TimelineJumpTarget =
       globalDay: number;
       productLineId: string;
     }
-  | {kind: 'slug'; slug: string};
+  | {kind: 'slug'; slug: string}
+  | {kind: 'slugs'; slugs: string[]};
 
 type ProcessedReleaseMatch = {
   company: ProcessedCompany;
@@ -530,12 +577,7 @@ function getPublicAssetPath(path: string) {
   return `${basePath}${path.replace(/^\/+/, '')}`;
 }
 
-type AppRoute = {
-  kind: 'timeline';
-} | {
-  kind: 'model';
-  slug: string;
-};
+type AppRoute = TimelineExperienceRoute;
 
 function getHashParts(hash: string) {
   const normalizedHash = hash.replace(/^#\/?/, '');
@@ -2060,6 +2102,35 @@ function resolveTimelineJumpTarget(
     return expandBoundsToMinimumSize(bounds, ARTICLE_FOCUS_MIN_BOUNDS_WIDTH, ARTICLE_FOCUS_MIN_BOUNDS_HEIGHT);
   }
 
+  if (target.kind === 'slugs') {
+    const slugBounds = target.slugs
+      .map((slug) =>
+        resolveTimelineJumpTarget(
+          {kind: 'slug', slug},
+          processedCompanies,
+          layout,
+          timelineHeight,
+          compact,
+          verticalScale,
+        ),
+      )
+      .filter((bounds): bounds is TimelineWorldBounds => Boolean(bounds));
+
+    if (slugBounds.length === 0) {
+      return null;
+    }
+
+    return slugBounds.reduce<TimelineWorldBounds>(
+      (combined, bounds) => ({
+        maxX: Math.max(combined.maxX, bounds.maxX),
+        maxY: Math.max(combined.maxY, bounds.maxY),
+        minX: Math.min(combined.minX, bounds.minX),
+        minY: Math.min(combined.minY, bounds.minY),
+      }),
+      slugBounds[0],
+    );
+  }
+
   if (target.kind === 'release') {
     const row = rowLayouts.find((entry) => entry.company.id === target.companyId);
 
@@ -2956,6 +3027,7 @@ function TimelineZoomRail({
   return (
     <div
       aria-label="Timeline zoom controls"
+      data-timeline-presentation-hide
       role="group"
       className={`absolute z-40 flex ${
         compact ? 'min-h-[17rem] w-12 py-3' : 'min-h-[22rem] w-14 py-4'
@@ -3456,7 +3528,10 @@ function ProductLineTimelineLane({
                 <div className="overflow-visible">
                     <button
                       type="button"
+                      data-timeline-company-id={company.id}
                       data-timeline-pin
+                      data-timeline-product-line-id={productLine.id}
+                      data-timeline-slug={release.articleSlug}
                       aria-current={isActiveArticle ? 'page' : undefined}
                       aria-label={`${openActionLabel} for ${release.name}, ${release.dateRangeLabel}`}
                       onClick={(event) => {
@@ -6406,7 +6481,7 @@ function TimelineRowFocusBands({
   timelineWidth: number;
 }) {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[6]">
+    <div data-timeline-presentation-hide aria-hidden="true" className="pointer-events-none absolute inset-0 z-[6]">
       {rowLayouts.map((row) => {
         const isActive = activeCompanyId === row.company.id;
 
@@ -6497,6 +6572,7 @@ function CompanyRowFocusLabel({
   return (
     <div
       data-row-focus-label
+      data-timeline-presentation-hide
       className="pointer-events-none absolute z-30 will-change-transform"
       style={{
         transform: `translate3d(${screenX}px, ${screenY}px, 0) translateY(-50%)`,
@@ -6683,7 +6759,7 @@ function DesktopTimelineExperience({
 
   return (
     <section className="relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden">
-      <div className="absolute left-5 top-5 z-40 [--category-expanded-width:40rem]">
+      <div data-timeline-presentation-hide className="absolute left-5 top-5 z-40 [--category-expanded-width:40rem]">
         {modelExplorer}
       </div>
 
@@ -6713,6 +6789,7 @@ function DesktopTimelineExperience({
           }}
         >
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 20}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.75, ease: [0.22, 1, 0.36, 1]}}
@@ -6731,6 +6808,7 @@ function DesktopTimelineExperience({
           </motion.div>
 
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 18}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1]}}
@@ -6887,6 +6965,7 @@ function DesktopTimelineExperience({
         </motion.section>
 
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 18}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.65, delay: 0.18, ease: [0.22, 1, 0.36, 1]}}
@@ -6905,6 +6984,7 @@ function DesktopTimelineExperience({
           </motion.div>
 
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 20}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.72, delay: 0.24, ease: [0.22, 1, 0.36, 1]}}
@@ -6959,7 +7039,7 @@ function DesktopTimelineExperience({
         zoom={zoom}
       />
 
-      <div className="absolute right-6 top-[calc(50%+12.5rem)] z-40 flex flex-col items-end gap-2">
+      <div data-timeline-presentation-hide className="absolute right-6 top-[calc(50%+12.5rem)] z-40 flex flex-col items-end gap-2">
           <SurfaceButton
           label={showTimelineGrid ? copy.timelineGridHideLabel : copy.timelineGridShowLabel}
           onClick={onToggleTimelineGrid}
@@ -7062,7 +7142,7 @@ function MobileTimelineExperience({
 
   return (
     <section className="relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden">
-      <div className="absolute left-3 top-3 z-40 [--category-expanded-width:min(20rem,calc(100vw-5rem))]">
+      <div data-timeline-presentation-hide className="absolute left-3 top-3 z-40 [--category-expanded-width:min(20rem,calc(100vw-5rem))]">
         {modelExplorer}
       </div>
 
@@ -7104,6 +7184,7 @@ function MobileTimelineExperience({
           }}
         >
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 18}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.72, ease: [0.22, 1, 0.36, 1]}}
@@ -7122,6 +7203,7 @@ function MobileTimelineExperience({
           </motion.div>
 
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 16}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.68, delay: 0.08, ease: [0.22, 1, 0.36, 1]}}
@@ -7278,6 +7360,7 @@ function MobileTimelineExperience({
         </motion.section>
 
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 16}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.62, delay: 0.18, ease: [0.22, 1, 0.36, 1]}}
@@ -7296,6 +7379,7 @@ function MobileTimelineExperience({
           </motion.div>
 
           <motion.div
+            data-timeline-presentation-hide
             initial={{opacity: 0, y: 18}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.68, delay: 0.24, ease: [0.22, 1, 0.36, 1]}}
@@ -7351,7 +7435,7 @@ function MobileTimelineExperience({
         zoom={zoom}
       />
 
-      <div className="absolute bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+      <div data-timeline-presentation-hide className="absolute bottom-4 right-4 z-40 flex flex-col items-end gap-2">
         <SurfaceButton
           label={showTimelineGrid ? copy.timelineGridHideLabel : copy.timelineGridShowLabel}
           onClick={onToggleTimelineGrid}
@@ -7379,7 +7463,7 @@ function MobileTimelineExperience({
   );
 }
 
-export function TimelineExperience({definition}: TimelineExperienceProps) {
+export function TimelineExperience({controllerRef, definition, presentation = false}: TimelineExperienceProps) {
   setActiveTimelineDefinition(definition);
 
   const [filterState, setFilterState] = useState<TimelineFilterState>(() => getCurrentTimelineFilterState());
@@ -7406,6 +7490,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
   const desktopCameraRef = useRef<CameraState>({x: 0, y: 0});
   const mobileCameraRef = useRef<CameraState>({x: 0, y: 0});
   const desktopCameraInterpolationRef = useRef<CameraInterpolationState>({
+    complete: null,
     frameId: null,
     lastFrameAt: null,
     stiffness: CAMERA_TARGET_INTERPOLATION_STIFFNESS,
@@ -7416,6 +7501,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
     zoomAnchor: null,
   });
   const mobileCameraInterpolationRef = useRef<CameraInterpolationState>({
+    complete: null,
     frameId: null,
     lastFrameAt: null,
     stiffness: CAMERA_TARGET_INTERPOLATION_STIFFNESS,
@@ -7652,6 +7738,10 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
   }, []);
 
   useEffect(() => {
+    if (presentation) {
+      return;
+    }
+
     const nextHash = serializeAppHash({
       companySortMode,
       filterState,
@@ -7662,7 +7752,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
     if (window.location.hash !== nextHash) {
       window.history.replaceState(null, '', nextHash);
     }
-  }, [companySortMode, filterState, route, significanceDisplayLimit]);
+  }, [companySortMode, filterState, presentation, route, significanceDisplayLimit]);
 
   useEffect(() => {
     return () => {
@@ -7671,10 +7761,12 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       if (desktopCameraInterpolationRef.current.frameId !== null) {
         window.cancelAnimationFrame(desktopCameraInterpolationRef.current.frameId);
       }
+      desktopCameraInterpolationRef.current.complete?.('cancelled');
 
       if (mobileCameraInterpolationRef.current.frameId !== null) {
         window.cancelAnimationFrame(mobileCameraInterpolationRef.current.frameId);
       }
+      mobileCameraInterpolationRef.current.complete?.('cancelled');
     };
   }, []);
 
@@ -8034,6 +8126,8 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       : target.camera;
     interpolation.zoomAnchor = null;
     commitDesktopCameraZoomState(target.zoom, snappedCamera);
+    interpolation.complete?.('completed');
+    interpolation.complete = null;
   };
 
   const runMobileCameraInterpolationFrame = (timestamp: number) => {
@@ -8083,10 +8177,13 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       : target.camera;
     interpolation.zoomAnchor = null;
     commitMobileCameraZoomState(target.zoom, snappedCamera);
+    interpolation.complete?.('completed');
+    interpolation.complete = null;
   };
 
   const setDesktopCameraTarget = (target: CameraViewState, options?: CameraTargetOptions) => {
     const interpolation = desktopCameraInterpolationRef.current;
+    interpolation.complete?.('cancelled');
     interpolation.target = target;
     interpolation.stiffness = options?.stiffness ?? CAMERA_TARGET_INTERPOLATION_STIFFNESS;
 
@@ -8096,14 +8193,19 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       interpolation.zoomAnchor = null;
     }
 
-    if (interpolation.frameId === null) {
-      interpolation.lastFrameAt = null;
-      interpolation.frameId = window.requestAnimationFrame(runDesktopCameraInterpolationFrame);
-    }
+    return new Promise<TimelineExperienceTransitionResult>((resolve) => {
+      interpolation.complete = resolve;
+
+      if (interpolation.frameId === null) {
+        interpolation.lastFrameAt = null;
+        interpolation.frameId = window.requestAnimationFrame(runDesktopCameraInterpolationFrame);
+      }
+    });
   };
 
   const setMobileCameraTarget = (target: CameraViewState, options?: CameraTargetOptions) => {
     const interpolation = mobileCameraInterpolationRef.current;
+    interpolation.complete?.('cancelled');
     interpolation.target = target;
     interpolation.stiffness = options?.stiffness ?? CAMERA_TARGET_INTERPOLATION_STIFFNESS;
 
@@ -8113,19 +8215,23 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       interpolation.zoomAnchor = null;
     }
 
-    if (interpolation.frameId === null) {
-      interpolation.lastFrameAt = null;
-      interpolation.frameId = window.requestAnimationFrame(runMobileCameraInterpolationFrame);
-    }
+    return new Promise<TimelineExperienceTransitionResult>((resolve) => {
+      interpolation.complete = resolve;
+
+      if (interpolation.frameId === null) {
+        interpolation.lastFrameAt = null;
+        interpolation.frameId = window.requestAnimationFrame(runMobileCameraInterpolationFrame);
+      }
+    });
   };
 
   const jumpToTimelineRegion = useCallback(
-    (target: TimelineJumpTarget) => {
+    (target: TimelineJumpTarget, options?: TimelineExperienceFocusOptions) => {
       const compact = !isDesktopViewport;
       const viewport = compact ? viewportSizes.mobile : viewportSizes.desktop;
 
       if (viewport.width <= 0 || viewport.height <= 0) {
-        return;
+        return Promise.resolve<TimelineExperienceTransitionResult>('unavailable');
       }
 
       const layout = compact ? mobileCanvasLayout : desktopCanvasLayout;
@@ -8140,7 +8246,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       );
 
       if (!bounds) {
-        return;
+        return Promise.resolve<TimelineExperienceTransitionResult>('unavailable');
       }
 
       const insets = getTimelineFocusInsets(viewport, compact, isArticleOpen);
@@ -8151,7 +8257,10 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       const view = getCameraViewForTimelineRegion({
         anchor,
         bounds,
-        focusMaxZoom: compact ? TIMELINE_REGION_FOCUS_MAX_ZOOM_MOBILE : TIMELINE_REGION_FOCUS_MAX_ZOOM_DESKTOP,
+        focusMaxZoom: Math.min(
+          options?.maxZoom ?? (compact ? TIMELINE_REGION_FOCUS_MAX_ZOOM_MOBILE : TIMELINE_REGION_FOCUS_MAX_ZOOM_DESKTOP),
+          compact ? MOBILE_MAX_ZOOM : DESKTOP_MAX_ZOOM,
+        ),
         insets,
         layout,
         maxZoom: compact ? MOBILE_MAX_ZOOM : DESKTOP_MAX_ZOOM,
@@ -8160,18 +8269,20 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       });
 
       if (!view) {
-        return;
+        return Promise.resolve<TimelineExperienceTransitionResult>('unavailable');
       }
 
-      const targetOptions: CameraTargetOptions =
-        target.kind === 'slug' ? {stiffness: MODEL_FOCUS_CAMERA_INTERPOLATION_STIFFNESS} : {};
+      const targetOptions: CameraTargetOptions = {
+        stiffness:
+          options?.stiffness ??
+          (target.kind === 'slug' ? MODEL_FOCUS_CAMERA_INTERPOLATION_STIFFNESS : CAMERA_TARGET_INTERPOLATION_STIFFNESS),
+      };
 
       if (compact) {
-        setMobileCameraTarget(view, targetOptions);
-        return;
+        return setMobileCameraTarget(view, targetOptions);
       }
 
-      setDesktopCameraTarget(view, targetOptions);
+      return setDesktopCameraTarget(view, targetOptions);
     },
     [
       desktopCanvasLayout,
@@ -8185,6 +8296,125 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       timelineData.processedCompanies,
       viewportSizes.desktop,
       viewportSizes.mobile,
+    ],
+  );
+
+  const applyExperienceState = (nextState: TimelineExperienceStatePatch) => {
+    [desktopCameraInterpolationRef.current, mobileCameraInterpolationRef.current].forEach((interpolation) => {
+      if (interpolation.frameId !== null) {
+        window.cancelAnimationFrame(interpolation.frameId);
+      }
+      interpolation.complete?.('cancelled');
+      interpolation.complete = null;
+      interpolation.frameId = null;
+      interpolation.lastFrameAt = null;
+      interpolation.zoomAnchor = null;
+    });
+
+    if (nextState.filterState) {
+      setFilterState(normalizeTimelineFilterState(nextState.filterState));
+    }
+    if (nextState.companySortMode !== undefined) {
+      setCompanySortMode(nextState.companySortMode);
+    }
+    if (nextState.significanceDisplayLimit !== undefined) {
+      setSignificanceDisplayLimit(nextState.significanceDisplayLimit);
+    }
+    if (nextState.hiddenCompanyIds) {
+      setHiddenCompanyIds([...nextState.hiddenCompanyIds]);
+    }
+    if (nextState.companyOrderIds) {
+      setCompanyOrderIds(getCanonicalCompanyOrderIds(nextState.companyOrderIds));
+    }
+    if (nextState.route) {
+      setRoute(nextState.route);
+      lastFocusedArticleSlugRef.current = null;
+    }
+    if (nextState.showTimelineGrid !== undefined) {
+      setShowTimelineGrid(nextState.showTimelineGrid);
+    }
+    if (nextState.desktopCamera || nextState.desktopZoom !== undefined) {
+      commitDesktopCameraZoomState(
+        nextState.desktopZoom ?? zoomRef.current,
+        nextState.desktopCamera ?? desktopCameraRef.current,
+      );
+    }
+    if (nextState.mobileCamera || nextState.mobileZoom !== undefined) {
+      commitMobileCameraZoomState(
+        nextState.mobileZoom ?? mobileZoomRef.current,
+        nextState.mobileCamera ?? mobileCameraRef.current,
+      );
+    }
+
+    return new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
+    });
+  };
+
+  useImperativeHandle(
+    controllerRef,
+    (): TimelineExperienceController => ({
+      cancelFocus() {
+        [desktopCameraInterpolationRef.current, mobileCameraInterpolationRef.current].forEach((interpolation) => {
+          if (interpolation.frameId !== null) {
+            window.cancelAnimationFrame(interpolation.frameId);
+          }
+          interpolation.complete?.('cancelled');
+          interpolation.complete = null;
+          interpolation.frameId = null;
+          interpolation.lastFrameAt = null;
+          interpolation.zoomAnchor = null;
+        });
+      },
+      focus(target, options) {
+        if (target.kind === 'default') {
+          return isDesktopViewport
+            ? setDesktopCameraTarget(getDefaultCameraView(desktopCanvasLayout), {stiffness: options?.stiffness})
+            : setMobileCameraTarget(getDefaultCameraView(mobileCanvasLayout, true), {stiffness: options?.stiffness});
+        }
+
+        return jumpToTimelineRegion(target, options);
+      },
+      getState() {
+        return {
+          companyOrderIds: [...companyOrderIds],
+          companySortMode,
+          desktopCamera: {...desktopCameraRef.current},
+          desktopZoom: zoomRef.current,
+          filterState: {
+            ...filterState,
+            attributeIds: [...filterState.attributeIds],
+            companyIds: [...filterState.companyIds],
+            domainIds: [...filterState.domainIds],
+          },
+          hiddenCompanyIds: [...hiddenCompanyIds],
+          mobileCamera: {...mobileCameraRef.current},
+          mobileZoom: mobileZoomRef.current,
+          route: {...route},
+          showTimelineGrid,
+          significanceDisplayLimit,
+        };
+      },
+      restoreState(state) {
+        return applyExperienceState(state);
+      },
+      setState(state) {
+        return applyExperienceState(state);
+      },
+    }),
+    [
+      companyOrderIds,
+      companySortMode,
+      controllerRef,
+      desktopCanvasLayout,
+      filterState,
+      hiddenCompanyIds,
+      isDesktopViewport,
+      jumpToTimelineRegion,
+      mobileCanvasLayout,
+      route,
+      showTimelineGrid,
+      significanceDisplayLimit,
     ],
   );
 
@@ -8239,7 +8469,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
     const handleKeyDown = (event: KeyboardEvent) => {
       const direction = getTimelinePinNavDirectionFromKey(event.key);
 
-      if (!direction || shouldIgnoreTimelinePinArrowNavigation(event) || !isReady) {
+      if (presentation || !direction || shouldIgnoreTimelinePinArrowNavigation(event) || !isReady) {
         return;
       }
 
@@ -8300,6 +8530,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
     mobileCanvasLayout,
     mobileTimelineVerticalScale,
     desktopTimelineVerticalScale,
+    presentation,
     timelineData.processedCompanies,
     viewportSizes.desktop,
     viewportSizes.mobile,
@@ -8307,6 +8538,9 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
 
   const cancelDesktopCameraInterpolation = () => {
     const interpolation = desktopCameraInterpolationRef.current;
+
+    interpolation.complete?.('cancelled');
+    interpolation.complete = null;
 
     if (interpolation.frameId !== null) {
       window.cancelAnimationFrame(interpolation.frameId);
@@ -8324,6 +8558,9 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
 
   const cancelMobileCameraInterpolation = () => {
     const interpolation = mobileCameraInterpolationRef.current;
+
+    interpolation.complete?.('cancelled');
+    interpolation.complete = null;
 
     if (interpolation.frameId !== null) {
       window.cancelAnimationFrame(interpolation.frameId);
@@ -8973,7 +9210,10 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
   }
 
   return (
-    <div className="relative isolate min-h-[100dvh] overflow-hidden bg-[var(--page-bg)] text-[var(--ink)] selection:bg-emerald-500/25 selection:text-[var(--ink)]">
+    <div
+      data-timeline-presentation={presentation ? '' : undefined}
+      className={`relative isolate min-h-[100dvh] overflow-hidden bg-[var(--page-bg)] text-[var(--ink)] selection:bg-emerald-500/25 selection:text-[var(--ink)] ${presentation ? 'pointer-events-none' : ''}`}
+    >
       <AuroraBackdrop />
       <div className="relative z-10">
         {!isDesktopViewport ? (
@@ -9060,7 +9300,7 @@ export function TimelineExperience({definition}: TimelineExperienceProps) {
       </div>
 
       <AnimatePresence>
-        {isArticleOpen ? (
+        {isArticleOpen && !presentation ? (
           <ModelArticlePanel
             entry={activeArticleEntry}
             onBack={navigateToTimelineRoute}
