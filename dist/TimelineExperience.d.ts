@@ -16,6 +16,10 @@ export type TimelineExperienceFocusTarget = {
     slugs: string[];
 };
 export type TimelineExperienceFocusOptions = {
+    anchor?: {
+        x: number;
+        y: number;
+    };
     maxZoom?: number;
     stiffness?: number;
 };

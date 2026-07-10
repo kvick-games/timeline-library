@@ -231,7 +231,7 @@ function er(t, a, n, r) {
     (ee, G) => Math.max(ee, Mi(G)),
     40
   ), g = ((M = (x = pe().scoring) == null ? void 0 : x.getTagSignificanceBonus) == null ? void 0 : M.call(x, f)) ?? 0, w = ((X = (L = pe().scoring) == null ? void 0 : L.getGroupRankBonus) == null ? void 0 : X.call(L, t)) ?? 0, y = m + g + w + Ni(u.id) + Di(c, r);
-  return ue(Math.round(y), 1, 100);
+  return ce(Math.round(y), 1, 100);
 }
 function Ci(t, a, n) {
   return a.releases.reduce(
@@ -550,7 +550,7 @@ function So(t, a) {
           return n.push(`${c.name} / ${x.label}: ${I.name}`), E;
         if (I.endDate && Number.isNaN(P.getTime()))
           return n.push(`${c.name} / ${x.label}: ${I.name} end date`), E;
-        const O = E[E.length - 1], j = Math.round((Y.getTime() - rt().getTime()) / it), Z = Number.isNaN(P.getTime()) ? j : Math.max(j, Math.round((P.getTime() - rt().getTime()) / it)), W = O ? j - O.globalDay : 0, ce = ka(I), q = er(c, x, I, a);
+        const O = E[E.length - 1], j = Math.round((Y.getTime() - rt().getTime()) / it), Z = Number.isNaN(P.getTime()) ? j : Math.max(j, Math.round((P.getTime() - rt().getTime()) / it)), W = O ? j - O.globalDay : 0, de = ka(I), q = er(c, x, I, a);
         return E.push({
           ...I,
           articleSlug: Kn(c.id, x.id, I),
@@ -559,10 +559,10 @@ function So(t, a) {
           durationDays: Z - j + 1,
           endDateLabel: I.endDate ? Le(I.endDate) : void 0,
           endGlobalDay: Z,
-          eventKind: ce.kind,
-          eventType: ce.id,
-          eventTypeLabel: ce.label,
-          eventTypeShortLabel: ce.shortLabel,
+          eventKind: de.kind,
+          eventType: de.id,
+          eventTypeLabel: de.label,
+          eventTypeShortLabel: de.shortLabel,
           globalDay: j,
           gap: W,
           significanceScore: q
@@ -790,7 +790,7 @@ function Qt({
       w - u * (t ? 0.28 : 0.24),
       E - (t ? 18 : 24)
     )
-  ), Y = t ? J + X + 18 : Math.min(J + X + 28, L + f - ee - 24), P = E + 8, O = J, j = w + s + (t ? 42 : 52), Z = J, W = j + (t ? 132 : 118), ce = t ? f >= 640 ? 2 : 1 : 4, N = Math.max(1, Math.ceil(Math.max(r, 1) / ce)) * (t ? 172 : 224), R = g + m + Math.max(n, 0) * ke, C = g + e * ke, A = Math.max(
+  ), Y = t ? J + X + 18 : Math.min(J + X + 28, L + f - ee - 24), P = E + 8, O = J, j = w + s + (t ? 42 : 52), Z = J, W = j + (t ? 132 : 118), de = t ? f >= 640 ? 2 : 1 : 4, N = Math.max(1, Math.ceil(Math.max(r, 1) / de)) * (t ? 172 : 224), R = g + m + Math.max(n, 0) * ke, C = g + e * ke, A = Math.max(
     R + y,
     C + c + m + y,
     Y + ee + y,
@@ -980,7 +980,7 @@ function Ho(t, a) {
     1,
     t.width - a.left - a.right - ft * 2
   );
-  return { x: ue(
+  return { x: ce(
     (e - a.left - ft) / s,
     0.42,
     0.68
@@ -1004,11 +1004,11 @@ function Vo({
   ), u = Math.max(
     1,
     d.height - r.top - r.bottom - ft * 2
-  ), m = Math.max(a.maxX - a.minX, 1), g = Math.max(a.maxY - a.minY, 1), w = Math.min(f / m, u / g) * rr * eo, y = Number(ue(w, c, Math.min(s, n)).toFixed(3)), x = (a.minX + a.maxX) / 2, M = (a.minY + a.maxY) / 2, L = r.left + ft + f * t.x, X = r.top + ft + u * t.y, ee = Math.max(0, e.worldWidth - d.width / y), G = Math.max(0, e.worldHeight - d.height / y);
+  ), m = Math.max(a.maxX - a.minX, 1), g = Math.max(a.maxY - a.minY, 1), w = Math.min(f / m, u / g) * rr * eo, y = Number(ce(w, c, Math.min(s, n)).toFixed(3)), x = (a.minX + a.maxX) / 2, M = (a.minY + a.maxY) / 2, L = r.left + ft + f * t.x, X = r.top + ft + u * t.y, ee = Math.max(0, e.worldWidth - d.width / y), G = Math.max(0, e.worldHeight - d.height / y);
   return {
     camera: {
-      x: ue(x - L / y, 0, ee),
-      y: ue(M - X / y, 0, G)
+      x: ce(x - L / y, 0, ee),
+      y: ce(M - X / y, 0, G)
     },
     zoom: y
   };
@@ -1121,16 +1121,16 @@ function Cn({
 function mt(t, a, n) {
   return t + (a - t) * n;
 }
-function ue(t, a, n) {
+function ce(t, a, n) {
   return Math.min(Math.max(t, a), n);
 }
 function jo(t) {
-  const a = ue(t, 0, 1), n = 1 / (1 + Math.exp(gt / 2)), r = 1 / (1 + Math.exp(-gt / 2));
+  const a = ce(t, 0, 1), n = 1 / (1 + Math.exp(gt / 2)), r = 1 / (1 + Math.exp(-gt / 2));
   return (1 / (1 + Math.exp(-gt * (a - 0.5))) - n) / (r - n);
 }
 function qo(t) {
-  const a = ue(t, 0, 1), n = 1 / (1 + Math.exp(gt / 2)), r = 1 / (1 + Math.exp(-gt / 2)), e = n + a * (r - n);
-  return ue(0.5 + Math.log(e / (1 - e)) / gt, 0, 1);
+  const a = ce(t, 0, 1), n = 1 / (1 + Math.exp(gt / 2)), r = 1 / (1 + Math.exp(-gt / 2)), e = n + a * (r - n);
+  return ce(0.5 + Math.log(e / (1 - e)) / gt, 0, 1);
 }
 function Ra(t, a, n) {
   if (n <= a)
@@ -1141,7 +1141,7 @@ function Ra(t, a, n) {
 function vr(t, a, n) {
   if (n <= a)
     return 0;
-  const r = (ue(t, a, n) - a) / (n - a);
+  const r = (ce(t, a, n) - a) / (n - a);
   return qo(r);
 }
 function Dt(t, a, n, r) {
@@ -1152,7 +1152,7 @@ function Rn(t, a, n) {
   if (t <= 0 || n <= 0)
     return 0.35;
   const r = Math.max(t - a, 120);
-  return ue(r / n * rr, 0.08, 1);
+  return ce(r / n * rr, 0.08, 1);
 }
 function Ko(t) {
   return /* @__PURE__ */ h("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", ...t, children: [
@@ -1231,7 +1231,7 @@ function Qo({
       ]
     },
     N
-  ), W = pe().sortOptions, ce = ((he = W.find((N) => N.id === r)) == null ? void 0 : he.label) ?? "Significance", q = r === "significance" ? "score" : ce;
+  ), W = pe().sortOptions, de = ((he = W.find((N) => N.id === r)) == null ? void 0 : he.label) ?? "Significance", q = r === "significance" ? "score" : de;
   return /* @__PURE__ */ h("aside", { className: j, onClick: P ? ee : void 0, children: [
     /* @__PURE__ */ h(
       "button",
@@ -1537,7 +1537,7 @@ function xr({
     const D = (U = d.current) == null ? void 0 : U.getBoundingClientRect();
     if (!D || D.height <= 0)
       return;
-    const S = ue(1 - (v - D.top) / D.height, 0, 1);
+    const S = ce(1 - (v - D.top) / D.height, 0, 1);
     s(() => Ra(S, r, n));
   }, Z = () => {
     g.current !== null && (window.cancelAnimationFrame(g.current), g.current = null);
@@ -1549,7 +1549,7 @@ function xr({
       const D = m.current;
       m.current = null, D !== null && j(D);
     }));
-  }, ce = (v) => {
+  }, de = (v) => {
     !v.isPrimary || v.button !== 0 || (f.current = v.pointerId, v.currentTarget.setPointerCapture(v.pointerId), P(!0, !0), j(v.clientY));
   }, q = (v) => {
     f.current === v.pointerId && (W(v.clientY), v.preventDefault());
@@ -1624,7 +1624,7 @@ function xr({
             className: `relative z-10 ${a ? "h-[12.5rem] w-8" : "h-[16rem] w-9"} cursor-ns-resize touch-none rounded-full focus-within:ring-2 focus-within:ring-[rgba(237,242,250,0.3)]`,
             onMouseDown: R,
             onPointerCancel: he,
-            onPointerDown: ce,
+            onPointerDown: de,
             onPointerMove: q,
             onPointerUp: he,
             children: [
@@ -1818,11 +1818,11 @@ function ns({
           }
         ) }),
         /* @__PURE__ */ i(Ge, { initial: !1, mode: "popLayout", children: d.releases.map((E, I) => {
-          var de, Q;
+          var ue, Q;
           const Y = d.releases[I - 1], P = t === E.articleSlug, O = P || Ot(E.globalDay, E.endGlobalDay, u), j = !!Y && Ot((Y == null ? void 0 : Y.globalDay) ?? E.globalDay, E.globalDay, u), Z = E.endGlobalDay > E.globalDay && Ot(E.globalDay, E.endGlobalDay, u);
           if (!O && !j && !Z)
             return null;
-          const W = Be(E.globalDay, m), ce = Y ? Be(Y.globalDay, m) : W, q = Y ? Math.max(0, W - ce) : 0, he = Y ? Po(E.gap, d.averageGap) : null, N = Kt(E.globalDay, E.endGlobalDay), R = ((de = d.latestRelease) == null ? void 0 : de.name) === E.name && ((Q = d.latestRelease) == null ? void 0 : Q.date) === E.date, C = R ? Ta(n.accent, 255, 0.12) : Ta(n.accent, 255, 0.24), A = He(n.accent, R ? 0.52 : 0.34), v = E.tags.includes("landmark-release"), D = R ? He(n.accent, 0.12) : v ? He(n.accent, 0.08) : void 0, U = E.eventKind === "event" ? "Open event" : "Open release", re = P ? `0 0 0 ${a ? 3 : 4}px rgba(237, 242, 250, 0.92), 0 0 0 ${a ? 7 : 8}px color-mix(in srgb, ${n.accent} 48%, transparent)` : v ? `0 0 0 ${a ? 5 : 6}px color-mix(in srgb, ${n.accent} 24%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 50%, transparent), 0 0 42px color-mix(in srgb, ${n.accent} 28%, transparent)` : R ? `0 0 0 ${a ? 4 : 5}px color-mix(in srgb, ${n.accent} 20%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 40%, transparent)` : `0 0 0 4px color-mix(in srgb, ${n.accent} 11%, transparent)`, te = P ? "saturate(1.45) brightness(1.14)" : v ? "saturate(1.38) brightness(1.1)" : R ? "saturate(1.35) brightness(1.08)" : void 0;
+          const W = Be(E.globalDay, m), de = Y ? Be(Y.globalDay, m) : W, q = Y ? Math.max(0, W - de) : 0, he = Y ? Po(E.gap, d.averageGap) : null, N = Kt(E.globalDay, E.endGlobalDay), R = ((ue = d.latestRelease) == null ? void 0 : ue.name) === E.name && ((Q = d.latestRelease) == null ? void 0 : Q.date) === E.date, C = R ? Ta(n.accent, 255, 0.12) : Ta(n.accent, 255, 0.24), A = He(n.accent, R ? 0.52 : 0.34), v = E.tags.includes("landmark-release"), D = R ? He(n.accent, 0.12) : v ? He(n.accent, 0.08) : void 0, U = E.eventKind === "event" ? "Open event" : "Open release", re = P ? `0 0 0 ${a ? 3 : 4}px rgba(237, 242, 250, 0.92), 0 0 0 ${a ? 7 : 8}px color-mix(in srgb, ${n.accent} 48%, transparent)` : v ? `0 0 0 ${a ? 5 : 6}px color-mix(in srgb, ${n.accent} 24%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 50%, transparent), 0 0 42px color-mix(in srgb, ${n.accent} 28%, transparent)` : R ? `0 0 0 ${a ? 4 : 5}px color-mix(in srgb, ${n.accent} 20%, transparent), 0 0 18px color-mix(in srgb, ${n.accent} 40%, transparent)` : `0 0 0 4px color-mix(in srgb, ${n.accent} 11%, transparent)`, te = P ? "saturate(1.45) brightness(1.14)" : v ? "saturate(1.38) brightness(1.1)" : R ? "saturate(1.35) brightness(1.08)" : void 0;
           return /* @__PURE__ */ h(
             xe.div,
             {
@@ -1845,7 +1845,7 @@ function ns({
                       className: `pointer-events-none absolute top-1/2 -translate-y-1/2 origin-left ${y ? "h-px" : "h-[2px]"}`,
                       style: {
                         backgroundColor: y ? x : n.accent,
-                        left: `${ce}px`,
+                        left: `${de}px`,
                         width: `${q}px`
                       }
                     }
@@ -1855,7 +1855,7 @@ function ns({
                     {
                       className: "timeline-gap absolute top-1/2 z-[5] -translate-x-1/2 -translate-y-1/2 hover:z-50 focus-within:z-50",
                       style: {
-                        left: `${ce + q / 2}px`,
+                        left: `${de + q / 2}px`,
                         "--gap-world-width": q
                       },
                       children: /* @__PURE__ */ h(
@@ -2378,8 +2378,8 @@ function vs({ accent: t, seedKey: a }) {
     ], u = (U) => {
       for (let re = 1; re < f.length; re += 1)
         if (U <= f[re].at) {
-          const te = f[re - 1], de = f[re], Q = (U - te.at) / (de.at - te.at);
-          return Nt(te.rgb, de.rgb, Q);
+          const te = f[re - 1], ue = f[re], Q = (U - te.at) / (ue.at - te.at);
+          return Nt(te.rgb, ue.rgb, Q);
         }
       return f[f.length - 1].rgb;
     }, m = _n, g = Pn, w = m * g;
@@ -2392,8 +2392,8 @@ function vs({ accent: t, seedKey: a }) {
         Math.max(0, Math.log(1 + U) / Math.log(1 + Er))
       );
       return Math.pow(re, 1.1);
-    }, G = (U, re, te, de) => {
-      const Q = ((re + 0.5) / de * 2 - 1) / s.zoom, H = ((U + 0.5) / te * 2 - 1) * M / s.zoom, z = H * y - Q * x + s.centerX, V = H * x + Q * y + s.centerY, se = gs(s, z, V);
+    }, G = (U, re, te, ue) => {
+      const Q = ((re + 0.5) / ue * 2 - 1) / s.zoom, H = ((U + 0.5) / te * 2 - 1) * M / s.zoom, z = H * y - Q * x + s.centerX, V = H * x + Q * y + s.centerY, se = gs(s, z, V);
       return {
         interior: se < 0,
         shaped: ee(se)
@@ -2405,7 +2405,7 @@ function vs({ accent: t, seedKey: a }) {
     const P = Y.getContext("2d");
     if (!I || !P)
       return;
-    const O = I.createImageData(oe, J), j = P.createImageData(m, g), Z = new Uint8ClampedArray(w * 3), W = new Uint8ClampedArray(w), ce = new Float32Array(w), q = (U) => 1 - Math.pow(1 - U, 3);
+    const O = I.createImageData(oe, J), j = P.createImageData(m, g), Z = new Uint8ClampedArray(w * 3), W = new Uint8ClampedArray(w), de = new Float32Array(w), q = (U) => 1 - Math.pow(1 - U, 3);
     let he = !1, N = 0, R = "base", C = 0, A = 0, v = 0, D = 0;
     const S = () => {
       if (he)
@@ -2429,7 +2429,7 @@ function vs({ accent: t, seedKey: a }) {
         for (let z = v; z < H; z += 1)
           for (let V = 0; V < m; V += 1) {
             const se = G(V, z, m, g), me = z * m + V, be = se.interior ? L : u(se.shaped);
-            Z[me * 3] = be[0], Z[me * 3 + 1] = be[1], Z[me * 3 + 2] = be[2], W[me] = se.interior ? 150 : Math.round(30 + se.shaped * 225), ce[me] = se.shaped;
+            Z[me * 3] = be[0], Z[me * 3 + 1] = be[1], Z[me * 3 + 2] = be[2], W[me] = se.interior ? 150 : Math.round(30 + se.shaped * 225), de[me] = se.shaped;
           }
         v = H, v >= g && (R = "reveal"), N = window.requestAnimationFrame(S);
         return;
@@ -2440,12 +2440,12 @@ function vs({ accent: t, seedKey: a }) {
       }
       const U = Math.min(1, D / Da), re = q(U) * (1 + Xn * 2), te = j.data;
       for (let Q = 0; Q < w; Q += 1) {
-        const H = (re - ce[Q]) / Xn, z = H <= 0 ? 0 : H >= 1 ? 1 : H, V = z * (1 - z) * 2 * us, se = Q * 4;
+        const H = (re - de[Q]) / Xn, z = H <= 0 ? 0 : H >= 1 ? 1 : H, V = z * (1 - z) * 2 * us, se = Q * 4;
         te[se] = Z[Q * 3] + (X[0] - Z[Q * 3]) * V, te[se + 1] = Z[Q * 3 + 1] + (X[1] - Z[Q * 3 + 1]) * V, te[se + 2] = Z[Q * 3 + 2] + (X[2] - Z[Q * 3 + 2]) * V, te[se + 3] = W[Q] * z + V * 30;
       }
       P.putImageData(j, 0, 0), e.clearRect(0, 0, m, g);
-      const de = 1 - q(U);
-      de > 3e-3 && (e.globalAlpha = de, e.drawImage(E, 0, 0, m, g), e.globalAlpha = 1), e.drawImage(Y, 0, 0), D < Da && (N = window.requestAnimationFrame(S));
+      const ue = 1 - q(U);
+      ue > 3e-3 && (e.globalAlpha = ue, e.drawImage(E, 0, 0, m, g), e.globalAlpha = 1), e.drawImage(Y, 0, 0), D < Da && (N = window.requestAnimationFrame(S));
     };
     return N = window.requestAnimationFrame(S), () => {
       he = !0, window.cancelAnimationFrame(N);
@@ -3627,7 +3627,7 @@ function Rs() {
     })(), W = (_, T, $) => {
       const k = e.createTexture(), ae = e.createFramebuffer();
       return !k || !ae ? (k && e.deleteTexture(k), ae && e.deleteFramebuffer(ae), null) : (e.bindTexture(e.TEXTURE_2D, k), e.texParameteri(e.TEXTURE_2D, e.TEXTURE_WRAP_S, e.CLAMP_TO_EDGE), e.texParameteri(e.TEXTURE_2D, e.TEXTURE_WRAP_T, e.CLAMP_TO_EDGE), e.texParameteri(e.TEXTURE_2D, e.TEXTURE_MIN_FILTER, Z.filter), e.texParameteri(e.TEXTURE_2D, e.TEXTURE_MAG_FILTER, Z.filter), e.texImage2D(e.TEXTURE_2D, 0, e.RGBA, _, T, 0, e.RGBA, Z.type, null), e.bindFramebuffer(e.FRAMEBUFFER, ae), e.framebufferTexture2D(e.FRAMEBUFFER, e.COLOR_ATTACHMENT0, e.TEXTURE_2D, k, 0), e.checkFramebufferStatus(e.FRAMEBUFFER) !== e.FRAMEBUFFER_COMPLETE ? (e.bindFramebuffer(e.FRAMEBUFFER, null), e.deleteTexture(k), e.deleteFramebuffer(ae), null) : (e.viewport(0, 0, _, T), e.clearColor($[0], $[1], $[2], $[3]), e.clear(e.COLOR_BUFFER_BIT), e.bindFramebuffer(e.FRAMEBUFFER, null), { framebuffer: ae, height: T, texture: k, width: _ }));
-    }, ce = (_, T) => {
+    }, de = (_, T) => {
       e.bindFramebuffer(e.FRAMEBUFFER, _.framebuffer), e.viewport(0, 0, _.width, _.height), e.clearColor(T[0], T[1], T[2], T[3]), e.clear(e.COLOR_BUFFER_BIT), e.bindFramebuffer(e.FRAMEBUFFER, null);
     }, q = (_) => {
       e.deleteFramebuffer(_.framebuffer), e.deleteTexture(_.texture);
@@ -3636,8 +3636,8 @@ function Rs() {
       return [T, $];
     };
     let N = 0, R = !1, C = null, A = null, v = null, D = null, S = null, U = 0, re = 0, te = 0;
-    const de = performance.now(), Q = window.matchMedia("(prefers-reduced-motion: reduce)"), H = [-1, -1, -1, -1];
-    let z = [0.5, 0.5], V = [0, 0], se = 0, me = null, be = de;
+    const ue = performance.now(), Q = window.matchMedia("(prefers-reduced-motion: reduce)"), H = [-1, -1, -1, -1];
+    let z = [0.5, 0.5], V = [0, 0], se = 0, me = null, be = ue;
     const B = () => {
       const [_, T] = he();
       if ((C == null ? void 0 : C[0].width) === _ && C[0].height === T)
@@ -3657,7 +3657,7 @@ function Rs() {
         Xe && q(Xe);
       }), C = null, A = null, v = null, D = null, S = null, !1) : (C = $, A = k, v = ae, D = Se, S = Ie, U = 0, re = 0, te = 0, !0);
     };
-    let De = de;
+    let De = ue;
     const et = 0.5, fe = [
       Math.random(),
       Math.random(),
@@ -3710,7 +3710,7 @@ function Rs() {
       const $ = r.width / Math.max(r.height, 1);
       let k = C[U], ae = C[1 - U];
       const Se = v[te];
-      e.bindFramebuffer(e.FRAMEBUFFER, ae.framebuffer), e.viewport(0, 0, ae.width, ae.height), e.useProgram(f), X(f), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Se.texture), e.uniform1i(G.velocityMap, 0), e.uniform1i(G.dyeMap, 1), e.uniform2f(G.texel, 1 / k.width, 1 / k.height), e.uniform2f(G.pointerPosition, z[0], z[1]), e.uniform2f(G.pointerVelocity, V[0], V[1]), e.uniform1f(G.pointerActive, a.current ? se : 0), e.uniform1f(G.pointerRadius, 0.088), e.uniform1f(G.deltaTime, _), e.uniform1f(G.elapsedTime, T), e.uniform1f(G.aspect, $), e.uniform4f(G.emitterSeed, fe[0], fe[1], fe[2], fe[3]), e.drawArrays(e.TRIANGLES, 0, 6), U = 1 - U, k = C[U], e.bindFramebuffer(e.FRAMEBUFFER, S.framebuffer), e.viewport(0, 0, S.width, S.height), e.useProgram(u), X(u), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.uniform1i(oe.velocityMap, 0), e.uniform2f(oe.texel, 1 / k.width, 1 / k.height), e.uniform1f(oe.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), ae = C[1 - U], e.bindFramebuffer(e.FRAMEBUFFER, ae.framebuffer), e.viewport(0, 0, ae.width, ae.height), e.useProgram(m), X(m), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(J.velocityMap, 0), e.uniform1i(J.curlMap, 1), e.uniform2f(J.texel, 1 / k.width, 1 / k.height), e.uniform1f(J.deltaTime, _ * 0.25), e.uniform1f(J.strength, 13), e.uniform1f(J.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), U = 1 - U, k = C[U], e.bindFramebuffer(e.FRAMEBUFFER, D.framebuffer), e.viewport(0, 0, D.width, D.height), e.useProgram(g), X(g), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.uniform1i(E.velocityMap, 0), e.uniform2f(E.texel, 1 / k.width, 1 / k.height), e.uniform4f(E.obstacleRect, H[0], H[1], H[2], H[3]), e.uniform1f(E.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), A.forEach((Xe) => ce(Xe, [0.5, 0, 0, 1])), re = 0;
+      e.bindFramebuffer(e.FRAMEBUFFER, ae.framebuffer), e.viewport(0, 0, ae.width, ae.height), e.useProgram(f), X(f), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, Se.texture), e.uniform1i(G.velocityMap, 0), e.uniform1i(G.dyeMap, 1), e.uniform2f(G.texel, 1 / k.width, 1 / k.height), e.uniform2f(G.pointerPosition, z[0], z[1]), e.uniform2f(G.pointerVelocity, V[0], V[1]), e.uniform1f(G.pointerActive, a.current ? se : 0), e.uniform1f(G.pointerRadius, 0.088), e.uniform1f(G.deltaTime, _), e.uniform1f(G.elapsedTime, T), e.uniform1f(G.aspect, $), e.uniform4f(G.emitterSeed, fe[0], fe[1], fe[2], fe[3]), e.drawArrays(e.TRIANGLES, 0, 6), U = 1 - U, k = C[U], e.bindFramebuffer(e.FRAMEBUFFER, S.framebuffer), e.viewport(0, 0, S.width, S.height), e.useProgram(u), X(u), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.uniform1i(oe.velocityMap, 0), e.uniform2f(oe.texel, 1 / k.width, 1 / k.height), e.uniform1f(oe.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), ae = C[1 - U], e.bindFramebuffer(e.FRAMEBUFFER, ae.framebuffer), e.viewport(0, 0, ae.width, ae.height), e.useProgram(m), X(m), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, S.texture), e.uniform1i(J.velocityMap, 0), e.uniform1i(J.curlMap, 1), e.uniform2f(J.texel, 1 / k.width, 1 / k.height), e.uniform1f(J.deltaTime, _ * 0.25), e.uniform1f(J.strength, 13), e.uniform1f(J.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), U = 1 - U, k = C[U], e.bindFramebuffer(e.FRAMEBUFFER, D.framebuffer), e.viewport(0, 0, D.width, D.height), e.useProgram(g), X(g), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, k.texture), e.uniform1i(E.velocityMap, 0), e.uniform2f(E.texel, 1 / k.width, 1 / k.height), e.uniform4f(E.obstacleRect, H[0], H[1], H[2], H[3]), e.uniform1f(E.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), A.forEach((Xe) => de(Xe, [0.5, 0, 0, 1])), re = 0;
       for (let Xe = 0; Xe < 12; Xe += 1) {
         const yt = A[re], tt = A[1 - re];
         e.bindFramebuffer(e.FRAMEBUFFER, tt.framebuffer), e.viewport(0, 0, tt.width, tt.height), e.useProgram(w), X(w), e.activeTexture(e.TEXTURE0), e.bindTexture(e.TEXTURE_2D, yt.texture), e.activeTexture(e.TEXTURE1), e.bindTexture(e.TEXTURE_2D, D.texture), e.uniform1i(I.pressureMap, 0), e.uniform1i(I.divergenceMap, 1), e.uniform2f(I.texel, 1 / yt.width, 1 / yt.height), e.uniform4f(I.obstacleRect, H[0], H[1], H[2], H[3]), e.uniform1f(I.aspect, $), e.drawArrays(e.TRIANGLES, 0, 6), re = 1 - re;
@@ -3729,12 +3729,12 @@ function Rs() {
       Ue();
       const T = Math.min(Math.max((_ - De) / 1e3, 1 / 120), 1 / 20);
       De = _;
-      const $ = (_ - de) / 1e3, k = T * et, ae = $ * et;
+      const $ = (_ - ue) / 1e3, k = T * et, ae = $ * et;
       le(T), sa(k, ae), lt(ae);
     }, Ce = (_) => {
       R || (N = window.requestAnimationFrame(Ce), !document.hidden && ge(_));
     }, qe = () => {
-      R || (Ue(), ge(de + 1e3), Q.matches || (N = window.requestAnimationFrame(Ce)));
+      R || (Ue(), ge(ue + 1e3), Q.matches || (N = window.requestAnimationFrame(Ce)));
     };
     return window.addEventListener("resize", Ue), window.addEventListener("pointermove", Pe, { passive: !0 }), qe(), () => {
       R = !0, window.cancelAnimationFrame(N), window.removeEventListener("resize", Ue), window.removeEventListener("pointermove", Pe), C == null || C.forEach(q), A == null || A.forEach(q), v == null || v.forEach(q), D && q(D), S && q(S), e.deleteBuffer(L), M();
@@ -3994,7 +3994,7 @@ function Ss({
   stopPanning: j,
   summaryCompanies: Z,
   timelineStartDay: W,
-  timelineWidth: ce,
+  timelineWidth: de,
   viewport: q,
   worldRef: he,
   yearTicks: N,
@@ -4007,25 +4007,25 @@ function Ss({
     summaryCount: Z.length,
     timelineStartDay: W,
     timelineHeight: v,
-    timelineWidth: ce,
+    timelineWidth: de,
     viewport: q
-  }), S = At(I, !1, 1, A), [U, re] = Te(null), te = ne(null), de = () => {
+  }), S = At(I, !1, 1, A), [U, re] = Te(null), te = ne(null), ue = () => {
     te.current !== null && (window.clearTimeout(te.current), te.current = null);
   }, Q = (le) => {
-    de(), re(le);
+    ue(), re(le);
   }, H = () => {
-    de(), re(null);
+    ue(), re(null);
   }, z = () => {
-    de(), te.current = window.setTimeout(() => {
+    ue(), te.current = window.setTimeout(() => {
       re(null), te.current = null;
     }, 120);
   };
-  Ae(() => () => de(), []);
-  const V = S.find((le) => le.company.id === U) ?? null, me = ue(116, 16, Math.max(16, q.width - 288 - 16)), be = V ? ue(
+  Ae(() => () => ue(), []);
+  const V = S.find((le) => le.company.id === U) ?? null, me = ce(116, 16, Math.max(16, q.width - 288 - 16)), be = V ? ce(
     (D.timelineY + V.y + V.height / 2 - n.y) * R,
     82,
     Math.max(82, q.height - 84)
-  ) : 0, B = Je(), De = a.isDefault ? B.defaultBoardDescription : a.isEmpty ? B.emptyBoardDetail : a.isComposite ? B.compositeBoardDescription(a.label) : B.singleBoardDescription(a.label), et = D.timelineX + W * ke, fe = ce + pt;
+  ) : 0, B = Je(), De = a.isDefault ? B.defaultBoardDescription : a.isEmpty ? B.emptyBoardDetail : a.isComposite ? B.compositeBoardDescription(a.label) : B.singleBoardDescription(a.label), et = D.timelineX + W * ke, fe = de + pt;
   return /* @__PURE__ */ h("section", { className: "relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden", children: [
     /* @__PURE__ */ i("div", { "data-timeline-presentation-hide": !0, className: "absolute left-5 top-5 z-40 [--category-expanded-width:40rem]", children: x }),
     /* @__PURE__ */ i(
@@ -4116,7 +4116,7 @@ function Ss({
                         onCompanyTap: Q,
                         railWidth: pt,
                         rowLayouts: S,
-                        timelineWidth: ce
+                        timelineWidth: de
                       }
                     ),
                     I.length === 0 ? /* @__PURE__ */ i("div", { className: "absolute bottom-0 left-[320px] right-0 top-0 z-20 flex items-center justify-center px-6", children: /* @__PURE__ */ i(
@@ -4136,7 +4136,7 @@ function Ss({
                           "div",
                           {
                             className: "relative",
-                            style: { width: `${ce}px`, minHeight: `${v}px` },
+                            style: { width: `${de}px`, minHeight: `${v}px` },
                             children: [
                               O ? /* @__PURE__ */ h("div", { className: "pointer-events-none absolute inset-0", "data-timeline-grid": !0, children: [
                                 M.map((le) => /* @__PURE__ */ i(
@@ -4290,7 +4290,7 @@ function Ss({
         onClearFocus: H,
         onCompanyHide: L,
         onCompanyMove: X,
-        onPointerEnter: de,
+        onPointerEnter: ue,
         onPointerLeave: z,
         row: V,
         rowCount: S.length,
@@ -4363,7 +4363,7 @@ function Is({
   timelineStartDay: j,
   timelineWidth: Z,
   viewport: W,
-  worldRef: ce,
+  worldRef: de,
   yearTicks: q,
   zoom: he
 }) {
@@ -4377,7 +4377,7 @@ function Is({
     timelineHeight: C,
     timelineWidth: Z,
     viewport: W
-  }), v = At(I, !0, 1, R), [D, S] = Te(null), U = (B) => S(B), re = () => S(null), te = v.find((B) => B.company.id === D) ?? null, Q = Math.max(16, Math.min(126, Math.max(16, W.width - 248 - 12))), H = te ? ue(
+  }), v = At(I, !0, 1, R), [D, S] = Te(null), U = (B) => S(B), re = () => S(null), te = v.find((B) => B.company.id === D) ?? null, Q = Math.max(16, Math.min(126, Math.max(16, W.width - 248 - 12))), H = te ? ce(
     (A.timelineY + te.y + te.height / 2 - n.y) * he,
     98,
     Math.max(98, W.height - 104)
@@ -4401,7 +4401,7 @@ function Is({
         children: /* @__PURE__ */ h(
           "div",
           {
-            ref: ce,
+            ref: de,
             className: "relative",
             style: {
               height: `${A.worldHeight}px`,
@@ -4698,7 +4698,7 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
     () => lo()
   ), [u, m] = Te(!1), [g, w] = Te(
     () => typeof window > "u" ? !0 : window.matchMedia("(min-width: 768px)").matches
-  ), [y, x] = Te(Vt), [M, L] = Te(Gt), [X, ee] = Te(!1), [G, oe] = Te(!1), [J, E] = Te(!0), [I, Y] = Te([]), [P, O] = Te(() => ze().map((o) => o.id)), [j, Z] = Te({ x: 0, y: 0 }), [W, ce] = Te({ x: 0, y: 0 }), [q, he] = Te(() => io()), N = ne(Vt), R = ne(Gt), C = ne({ x: 0, y: 0 }), A = ne({ x: 0, y: 0 }), v = ne({
+  ), [y, x] = Te(Vt), [M, L] = Te(Gt), [X, ee] = Te(!1), [G, oe] = Te(!1), [J, E] = Te(!0), [I, Y] = Te([]), [P, O] = Te(() => ze().map((o) => o.id)), [j, Z] = Te({ x: 0, y: 0 }), [W, de] = Te({ x: 0, y: 0 }), [q, he] = Te(() => io()), N = ne(Vt), R = ne(Gt), C = ne({ x: 0, y: 0 }), A = ne({ x: 0, y: 0 }), v = ne({
     complete: null,
     frameId: null,
     lastFrameAt: null,
@@ -4718,7 +4718,7 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
       zoom: Gt
     },
     zoomAnchor: null
-  }), S = ne(null), U = ne(null), re = ne(null), te = ne(null), de = ne(null), Q = ne(null), H = ne(null), z = ne(null), V = ne(!1), se = ne(!1), me = ne(null), be = ne(null), B = ne(!1), De = ne(null), et = ne(() => {
+  }), S = ne(null), U = ne(null), re = ne(null), te = ne(null), ue = ne(null), Q = ne(null), H = ne(null), z = ne(null), V = ne(!1), se = ne(!1), me = ne(null), be = ne(null), B = ne(!1), De = ne(null), et = ne(() => {
   }), fe = ne(null), Ue = ne(null), le = ne({
     lastX: 0,
     lastY: 0,
@@ -5022,10 +5022,10 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
   }, Ut = (o, l) => {
     N.current = o, C.current = l, Wt(re.current, l, o), x(o), Z(l);
   }, Xt = (o, l) => {
-    R.current = o, A.current = l, Wt(te.current, l, o), L(o), ce(l);
+    R.current = o, A.current = l, Wt(te.current, l, o), L(o), de(l);
   }, tn = (o) => {
     var Ye;
-    const l = v.current, p = l.lastFrameAt === null ? 1 / 60 : ue((o - l.lastFrameAt) / 1e3, 0, 0.064);
+    const l = v.current, p = l.lastFrameAt === null ? 1 / 60 : ce((o - l.lastFrameAt) / 1e3, 0, 0.064);
     l.lastFrameAt = o;
     const { target: b, zoomAnchor: F } = l, ie = 1 - Math.exp(-l.stiffness * p), ve = mt(N.current, b.zoom, ie), ye = F ? ut(
       F.worldX,
@@ -5054,7 +5054,7 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
     l.zoomAnchor = null, Ut(b.zoom, Me), (Ye = l.complete) == null || Ye.call(l, "completed"), l.complete = null;
   }, an = (o) => {
     var Ye;
-    const l = D.current, p = l.lastFrameAt === null ? 1 / 60 : ue((o - l.lastFrameAt) / 1e3, 0, 0.064);
+    const l = D.current, p = l.lastFrameAt === null ? 1 / 60 : ce((o - l.lastFrameAt) / 1e3, 0, 0.064);
     l.lastFrameAt = o;
     const { target: b, zoomAnchor: F } = l, ie = 1 - Math.exp(-l.stiffness * p), ve = mt(R.current, b.zoom, ie), ye = F ? ut(
       F.worldX,
@@ -5108,7 +5108,10 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
       );
       if (!ve)
         return Promise.resolve("unavailable");
-      const ye = Wo(b, p, qe), Re = qe && !p ? Ho(b, ye) : sr, Ne = Vo({
+      const ye = Wo(b, p, qe), Re = l != null && l.anchor ? {
+        x: ce(l.anchor.x, 0, 1),
+        y: ce(l.anchor.y, 0, 1)
+      } : qe && !p ? Ho(b, ye) : sr, Ne = Vo({
         anchor: Re,
         bounds: ve,
         focusMaxZoom: Math.min(
@@ -5286,20 +5289,20 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
     }, o.stiffness = at, o.zoomAnchor = null;
   }, Or = () => {
     const o = S.current;
-    de.current = ((o == null ? void 0 : o.clientWidth) ?? K.desktop.width) / 2, Q.current = ((o == null ? void 0 : o.clientHeight) ?? K.desktop.height) / 2, Yt(dt(Ke));
+    ue.current = ((o == null ? void 0 : o.clientWidth) ?? K.desktop.width) / 2, Q.current = ((o == null ? void 0 : o.clientHeight) ?? K.desktop.height) / 2, Yt(dt(Ke));
   }, Wr = () => {
     const o = U.current;
     H.current = ((o == null ? void 0 : o.clientWidth) ?? K.mobile.width) / 2, z.current = ((o == null ? void 0 : o.clientHeight) ?? K.mobile.height) / 2, zt(dt(Ze, !0));
   }, rn = (o, l) => {
-    const p = S.current, b = K.desktop, F = ue(
-      (l == null ? void 0 : l.x) ?? de.current ?? ((p == null ? void 0 : p.clientWidth) ?? b.width) / 2,
+    const p = S.current, b = K.desktop, F = ce(
+      (l == null ? void 0 : l.x) ?? ue.current ?? ((p == null ? void 0 : p.clientWidth) ?? b.width) / 2,
       0,
       (p == null ? void 0 : p.clientWidth) ?? b.width
-    ), ie = ue(
+    ), ie = ce(
       (l == null ? void 0 : l.y) ?? Q.current ?? ((p == null ? void 0 : p.clientHeight) ?? b.height) / 2,
       0,
       (p == null ? void 0 : p.clientHeight) ?? b.height
-    ), ve = v.current, ye = N.current, Re = Number(ue(o(ye), wt, Mt).toFixed(3));
+    ), ve = v.current, ye = N.current, Re = Number(ce(o(ye), wt, Mt).toFixed(3));
     if (Re === ye)
       return;
     const Ne = Cn({
@@ -5323,15 +5326,15 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
       { zoomAnchor: Ne }
     );
   }, on = (o, l) => {
-    const p = U.current, b = K.mobile, F = ue(
+    const p = U.current, b = K.mobile, F = ce(
       (l == null ? void 0 : l.x) ?? H.current ?? ((p == null ? void 0 : p.clientWidth) ?? b.width) / 2,
       0,
       (p == null ? void 0 : p.clientWidth) ?? b.width
-    ), ie = ue(
+    ), ie = ce(
       (l == null ? void 0 : l.y) ?? z.current ?? ((p == null ? void 0 : p.clientHeight) ?? b.height) / 2,
       0,
       (p == null ? void 0 : p.clientHeight) ?? b.height
-    ), ve = D.current, ye = R.current, Re = Number(ue(o(ye), St, Bt).toFixed(3));
+    ), ve = D.current, ye = R.current, Re = Number(ce(o(ye), St, Bt).toFixed(3));
     if (Re === ye)
       return;
     const Ne = Cn({
@@ -5360,10 +5363,10 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
       return;
     o.cancelable && o.preventDefault();
     const l = S.current, p = l.getBoundingClientRect(), b = {
-      x: ue(o.clientX - p.left, 0, l.clientWidth),
-      y: ue(o.clientY - p.top, 0, l.clientHeight)
+      x: ce(o.clientX - p.left, 0, l.clientWidth),
+      y: ce(o.clientY - p.top, 0, l.clientHeight)
     };
-    de.current = b.x, Q.current = b.y;
+    ue.current = b.x, Q.current = b.y;
     const F = o.deltaMode === 1 ? o.deltaY * 16 : o.deltaMode === 2 ? o.deltaY * l.clientHeight : o.deltaY;
     rn(
       (ie) => Dt(ie, -F * ji, wt, Mt),
@@ -5385,7 +5388,7 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
     if (o.pointerType !== "mouse" || o.button !== 0 || !S.current)
       return;
     const l = S.current, p = l.getBoundingClientRect();
-    de.current = o.clientX - p.left, Q.current = o.clientY - p.top, zr(), B.current = !1, me.current = o.pointerId, le.current = {
+    ue.current = o.clientX - p.left, Q.current = o.clientY - p.top, zr(), B.current = !1, me.current = o.pointerId, le.current = {
       lastX: o.clientX,
       lastY: o.clientY,
       startX: o.clientX,
@@ -5402,7 +5405,7 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
     if (!o || me.current === null)
       return;
     const p = S.current.getBoundingClientRect(), b = o.clientX - p.left;
-    de.current = b, Q.current = o.clientY - p.top;
+    ue.current = b, Q.current = o.clientY - p.top;
     const F = o.clientX - le.current.lastX, ie = o.clientY - le.current.lastY, ve = {
       x: C.current.x - F / Math.max(N.current, 1e-3),
       y: C.current.y - ie / Math.max(N.current, 1e-3)
@@ -5414,11 +5417,11 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
   }, Vr = (o) => {
     if (o.pointerType === "mouse" && S.current) {
       const l = S.current.getBoundingClientRect();
-      de.current = ue(
+      ue.current = ce(
         o.clientX - l.left,
         0,
         S.current.clientWidth
-      ), Q.current = ue(
+      ), Q.current = ce(
         o.clientY - l.top,
         0,
         S.current.clientHeight
@@ -5446,7 +5449,7 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
     clientY: (o.clientY + l.clientY) / 2
   }), dn = (o, l) => {
     const p = l.getBoundingClientRect();
-    H.current = ue(o.clientX - p.left, 0, l.clientWidth), z.current = ue(o.clientY - p.top, 0, l.clientHeight);
+    H.current = ce(o.clientX - p.left, 0, l.clientWidth), z.current = ce(o.clientY - p.top, 0, l.clientHeight);
   }, un = (o, l) => {
     const p = {
       x: A.current.x - o / Math.max(R.current, 1e-3),
@@ -5518,14 +5521,14 @@ function Xs({ controllerRef: t, definition: a, presentation: n = !1 }) {
     }
     const ye = ie.clientX - p.lastMidpointX, Re = ie.clientY - p.lastMidpointY;
     un(ye, Re);
-    const Ne = ue(ve / Math.max(p.distance, 1), 0.78, 1.28);
+    const Ne = ce(ve / Math.max(p.distance, 1), 0.78, 1.28);
     on((Me) => Me * Ne, {
       x: H.current ?? l.clientWidth / 2,
       y: z.current ?? l.clientHeight / 2
     }), p.distance = ve, p.lastMidpointX = ie.clientX, p.lastMidpointY = ie.clientY, p.lastX = ie.clientX, p.lastY = ie.clientY, o.preventDefault();
   }, Kr = (o) => {
     const l = Pe.current;
-    if (Et(o.touches), ce(A.current), !l || l.type !== "pan" || o.changedTouches.length === 0)
+    if (Et(o.touches), de(A.current), !l || l.type !== "pan" || o.changedTouches.length === 0)
       return;
     const p = o.changedTouches[0];
     Math.hypot(p.clientX - l.startX, p.clientY - l.startY) > Tn || wa(

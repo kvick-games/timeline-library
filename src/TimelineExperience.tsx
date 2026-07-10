@@ -83,6 +83,7 @@ export type TimelineExperienceFocusTarget =
   | {kind: 'slugs'; slugs: string[]};
 
 export type TimelineExperienceFocusOptions = {
+  anchor?: {x: number; y: number};
   maxZoom?: number;
   stiffness?: number;
 };
@@ -8250,8 +8251,12 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
       }
 
       const insets = getTimelineFocusInsets(viewport, compact, isArticleOpen);
-      const anchor =
-        isArticleOpen && !compact
+      const anchor = options?.anchor
+        ? {
+            x: clampNumber(options.anchor.x, 0, 1),
+            y: clampNumber(options.anchor.y, 0, 1),
+          }
+        : isArticleOpen && !compact
           ? getArticleTimelineFocusAnchor(viewport, insets)
           : DEFAULT_TIMELINE_FOCUS_ANCHOR;
       const view = getCameraViewForTimelineRegion({
