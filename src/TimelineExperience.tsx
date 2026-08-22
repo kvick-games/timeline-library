@@ -33,6 +33,7 @@ import {
   formatTimelineDateRange,
   getTimelineItemSlug as getReleaseSlug,
   parseTimelineDate,
+  withDaysSinceFact,
 } from './utils';
 import type {
   ArticleMedia,
@@ -4500,12 +4501,15 @@ function ModelArticlePanel({
 
         {entry ? (
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {(article?.facts ?? [
-              {label: 'Company', value: entry.companyName},
-              {label: 'Product line', value: entry.productLineLabel},
-              {label: entry.eventKind === 'event' ? 'Event date' : 'Release date', value: entry.dateRangeLabel},
-              {label: 'Type', value: entry.eventTypeLabel},
-            ]).map((fact) => (
+            {withDaysSinceFact(
+              article?.facts ?? [
+                {label: 'Company', value: entry.companyName},
+                {label: 'Product line', value: entry.productLineLabel},
+                {label: entry.eventKind === 'event' ? 'Event date' : 'Release date', value: entry.dateRangeLabel},
+                {label: 'Type', value: entry.eventTypeLabel},
+              ],
+              {date: entry.date, eventKind: entry.eventKind},
+            ).map((fact) => (
               <div key={`${fact.label}-${fact.value}`} className="border-t border-[var(--edge)] pt-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{fact.label}</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--ink)]">{fact.value}</p>

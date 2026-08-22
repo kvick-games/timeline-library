@@ -1,9 +1,11 @@
 import type {
+  ArticleFact,
   CompanyRecord,
   ModelArticle,
   ModelReleaseIndexEntry,
   ReleaseRecord,
   TimelineDatePrecision,
+  TimelineEventKind,
   TimelineEventTypeConfig,
 } from './types';
 
@@ -92,6 +94,80 @@ export function formatTimelineDateRange(
   }
 
   return `${formatTimelineDate(start)} - ${formatTimelineDate(end)}`;
+}
+
+export function getUtcCalendarDayDelta(fromIsoDate: string, toDate: Date = new Date()): number | null {
+  const from = parseTimelineDate(fromIsoDate);
+
+  if (Number.isNaN(from.getTime())) {
+    return null;
+  }
+
+  const fromUtc = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
+  const toUtc = Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), toDate.getUTCDate());
+  return Math.round((toUtc - fromUtc) / DAY_MS);
+}
+
+export function formatDaysSince(fromIsoDate: string, toDate: Date = new Date()): string | null {
+  const days = getUtcCalendarDayDelta(fromIsoDate, toDate);
+
+  if (days === null) {
+    return null;
+  }
+
+  if (days === 0) {
+    return 'Today';
+  }
+
+  if (days === 1) {
+    return '1 day ago';
+  }
+
+  if (days === -1) {
+    return 'Tomorrow';
+  }
+
+  if (days > 1) {
+    return `${days.toLocaleString('en-US')} days ago`;
+  }
+
+  return `in ${Math.abs(days).toLocaleString('en-US')} days`;
+}
+
+export function withDaysSinceFact(
+  facts: ArticleFact[],
+  {
+    date,
+    eventKind,
+    now,
+  }: {
+    date: string;
+    eventKind: TimelineEventKind;
+    now?: Date;
+  },
+): ArticleFact[] {
+  const value = formatDaysSince(date, now);
+
+  if (!value) {
+    return facts;
+  }
+
+  const label = eventKind === 'event' ? 'Time since event' : 'Time since release';
+  const ageFact: ArticleFact = {label, value};
+  const existingIndex = facts.findIndex((fact) => fact.label === label);
+
+  if (existingIndex >= 0) {
+    return facts.map((fact, index) => (index === existingIndex ? ageFact : fact));
+  }
+
+  const dateLabel = eventKind === 'event' ? 'Event date' : 'Release date';
+  const dateIndex = facts.findIndex((fact) => fact.label === dateLabel);
+
+  if (dateIndex === -1) {
+    return [...facts, ageFact];
+  }
+
+  return [...facts.slice(0, dateIndex + 1), ageFact, ...facts.slice(dateIndex + 1)];
 }
 
 export function getTimelineItemSlug(groupId: string, laneId: string, item: ReleaseRecord) {
