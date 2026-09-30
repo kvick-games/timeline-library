@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {flushSync} from 'react-dom';
 import {
   ArrowDown,
@@ -777,10 +777,7 @@ function tryDismissTimelineArticleOnBackgroundClick(
 }
 
 function formatUtcDate(date: Date, options: Intl.DateTimeFormatOptions) {
-  return date.toLocaleDateString('en-US', {
-    timeZone: 'UTC',
-    ...options,
-  });
+  return formatTimelineDate(date, options);
 }
 
 function mixHexColor(hexColor: string, targetChannel: number, amount: number) {
@@ -1424,14 +1421,18 @@ function getProceduralTimelineRange({
   viewport: ViewportSize;
   zoom: number;
 }): TimelineDayWindow {
-  const cameraWindow = getTimelineViewportDayWindow({
-    camera,
-    compact,
-    futureBufferDays: TIMELINE_RENDER_FUTURE_BUFFER_DAYS,
-    pastBufferDays: TIMELINE_RENDER_PAST_BUFFER_DAYS,
-    viewport,
-    zoom,
-  });
+  // Chunked so the range (and every memoized row keyed on it) only changes when
+  // the camera crosses a chunk boundary, not on every pan/zoom frame.
+  const cameraWindow = getChunkedTimelineDayWindow(
+    getTimelineViewportDayWindow({
+      camera,
+      compact,
+      futureBufferDays: TIMELINE_RENDER_FUTURE_BUFFER_DAYS,
+      pastBufferDays: TIMELINE_RENDER_PAST_BUFFER_DAYS,
+      viewport,
+      zoom,
+    }),
+  );
 
   return {
     endDay: Math.max(minimumDays, cameraWindow.endDay),
@@ -1680,6 +1681,70 @@ function getTimelineWorldTransform(camera: CameraState, zoom: number) {
 const worldWillChangeIdleTimers = new WeakMap<HTMLElement, number>();
 const WORLD_WILL_CHANGE_IDLE_MS = 126;
 
+// The classes that read the map zoom (see timeline.css), apart from the gap
+// tooltip, which is handled separately below.
+const MAP_ZOOM_CONSUMER_CLASS_NAMES = ['timeline-map-label', 'timeline-map-screen-fixed', 'timeline-gap-collapse'];
+const GAP_TOOLTIP_CLASS_NAME = 'timeline-gap-tooltip';
+// Every gap keeps its (hidden) tooltip mounted, which is roughly a third of the
+// world DOM, but a tooltip is only visible while its gap is hovered or focused.
+const VISIBLE_GAP_TOOLTIP_SELECTOR =
+  '.timeline-gap:hover .timeline-gap-tooltip, .timeline-gap:focus-within .timeline-gap-tooltip';
+const mapZoomConsumerCollections = new WeakMap<HTMLElement, HTMLCollectionOf<HTMLElement>[]>();
+const worldMapZoomValues = new WeakMap<HTMLElement, string>();
+
+function getMapZoomConsumerCollections(world: HTMLElement) {
+  let collections = mapZoomConsumerCollections.get(world);
+
+  if (!collections) {
+    // Live collections track mounts/unmounts without re-querying each frame.
+    collections = [...MAP_ZOOM_CONSUMER_CLASS_NAMES, GAP_TOOLTIP_CLASS_NAME].map(
+      (className) => world.getElementsByClassName(className) as HTMLCollectionOf<HTMLElement>,
+    );
+    mapZoomConsumerCollections.set(world, collections);
+  }
+
+  return collections;
+}
+
+function setMapZoomFrame(element: HTMLElement, mapZoom: string) {
+  if (element.style.getPropertyValue('--map-zoom-frame') !== mapZoom) {
+    element.style.setProperty('--map-zoom-frame', mapZoom);
+  }
+}
+
+// Writes the non-inherited `--map-zoom-frame` (see timeline.css), so each write
+// restyles only the consumer itself rather than its subtree. Hidden gap
+// tooltips are skipped; they pick up the world value once motion settles.
+function setMapZoomOnConsumers(world: HTMLElement, mapZoom: string) {
+  const collections = getMapZoomConsumerCollections(world);
+
+  for (let collectionIndex = 0; collectionIndex < MAP_ZOOM_CONSUMER_CLASS_NAMES.length; collectionIndex += 1) {
+    const collection = collections[collectionIndex];
+
+    for (let index = 0; index < collection.length; index += 1) {
+      setMapZoomFrame(collection[index], mapZoom);
+    }
+  }
+
+  world.querySelectorAll<HTMLElement>(VISIBLE_GAP_TOOLTIP_SELECTOR).forEach((tooltip) => setMapZoomFrame(tooltip, mapZoom));
+}
+
+function clearMapZoomOnConsumers(world: HTMLElement) {
+  for (const collection of getMapZoomConsumerCollections(world)) {
+    for (let index = 0; index < collection.length; index += 1) {
+      collection[index].style.removeProperty('--map-zoom-frame');
+    }
+  }
+}
+
+function syncWorldMapZoom(world: HTMLElement, mapZoom: string) {
+  if (world.style.getPropertyValue('--map-zoom') !== mapZoom) {
+    world.style.setProperty('--map-zoom', mapZoom);
+  }
+
+  clearMapZoomOnConsumers(world);
+}
+
 function applyTimelineWorldTransform(
   element: HTMLDivElement | null,
   camera: CameraState,
@@ -1690,7 +1755,22 @@ function applyTimelineWorldTransform(
   }
 
   element.style.transform = getTimelineWorldTransform(camera, zoom);
-  element.style.setProperty('--map-zoom', String(getMapZoomCssValue(zoom)));
+
+  // `--map-zoom` is inherited, so changing it on the world restyles the whole
+  // world subtree (~1.5k elements) even though only ~150 elements read it.
+  // A discrete change writes the world once. During continuous motion the
+  // frames write `--map-zoom-frame` straight onto the consumers, and the world
+  // is synced (and the per-frame overrides dropped) once motion settles, so
+  // later mounts inherit the right value.
+  const mapZoom = String(getMapZoomCssValue(zoom));
+  if (worldMapZoomValues.get(element) !== mapZoom) {
+    if (worldWillChangeIdleTimers.has(element)) {
+      setMapZoomOnConsumers(element, mapZoom);
+    } else {
+      syncWorldMapZoom(element, mapZoom);
+    }
+    worldMapZoomValues.set(element, mapZoom);
+  }
 
   // Promote the world to its own compositor layer while it is actively moving
   // so pan/zoom stays smooth, then drop the hint once motion settles. A pinned
@@ -1698,15 +1778,35 @@ function applyTimelineWorldTransform(
   // on zoom, which makes pin labels blurry; clearing it lets the browser
   // re-rasterize text crisply at the current zoom.
   element.style.willChange = 'transform';
+  // Also suspends zoom-driven CSS transitions (see `data-camera-moving` in
+  // timeline.css) so they are not cancelled and restarted on every frame.
+  element.setAttribute('data-camera-moving', '');
   const existingTimer = worldWillChangeIdleTimers.get(element);
   if (existingTimer !== undefined) {
     window.clearTimeout(existingTimer);
   }
   const timerId = window.setTimeout(() => {
     element.style.willChange = 'auto';
+    element.removeAttribute('data-camera-moving');
+    syncWorldMapZoom(element, mapZoom);
     worldWillChangeIdleTimers.delete(element);
   }, WORLD_WILL_CHANGE_IDLE_MS);
   worldWillChangeIdleTimers.set(element, timerId);
+}
+
+// `--map-zoom` is owned by applyTimelineWorldTransform rather than the world's
+// style prop (React would rewrite it on every camera frame), so seed a freshly
+// mounted world with the zoom it mounted at.
+function useSeedWorldMapZoom(worldRef: React.RefObject<HTMLDivElement | null>, zoom: number) {
+  useLayoutEffect(() => {
+    const world = worldRef.current;
+
+    if (world && !worldMapZoomValues.has(world)) {
+      const mapZoom = String(getMapZoomCssValue(zoom));
+      syncWorldMapZoom(world, mapZoom);
+      worldMapZoomValues.set(world, mapZoom);
+    }
+  }, [worldRef]);
 }
 
 function getTimelineMapLabelStyle(baseFontSizePx: number) {
@@ -3334,7 +3434,7 @@ function ProductLineTimelineLane({
     : 'absolute left-4 top-0 origin-bottom-left -translate-y-2 -rotate-[28deg] transition duration-300 group-hover:-translate-y-3';
   const releaseLabelBodyClass = compact
     ? 'timeline-map-screen-label whitespace-nowrap rounded-[0.7rem] border px-1.5 py-0.5 font-bold tracking-[0.01em] shadow-[var(--soft-shadow)] backdrop-blur-sm'
-    : 'timeline-map-screen-label whitespace-nowrap rounded-[0.8rem] border bg-[var(--surface-strong)] px-2 py-1 font-bold tracking-[0.015em] shadow-[var(--soft-shadow)] backdrop-blur-sm group-hover:bg-[var(--surface)]';
+    : 'timeline-map-screen-label whitespace-nowrap rounded-[0.8rem] border bg-[var(--surface-strong)] px-2 py-1 font-bold tracking-[0.015em] shadow-[var(--soft-shadow)] group-hover:bg-[var(--surface)]';
   const releaseLabelFontSize = compact ? 10 : 12;
   const branchSource = getBranchSourceLine(company.productLines, productLineIndex);
   const trackStartOffsetPx =
@@ -3579,7 +3679,13 @@ function ProductLineTimelineLane({
 
                     <div className={`${releaseLabelShellClass} z-[2]`}>
                       <div
-                        className={`${releaseLabelBodyClass} ${isActiveArticle ? 'timeline-pin-label--selected' : ''}`}
+                        className={`${releaseLabelBodyClass} ${
+                          // The fluid behind the timeline redraws every frame, so each
+                          // backdrop blur is re-rendered every frame too. Desktop labels
+                          // sit on the ~opaque surface unless they carry an accent tint,
+                          // so only blur where the backdrop actually shows through.
+                          compact || (labelBackground && !isActiveArticle) ? 'backdrop-blur-sm' : ''
+                        } ${isActiveArticle ? 'timeline-pin-label--selected' : ''}`}
                         style={{
                           backgroundColor: isActiveArticle
                             ? 'var(--surface-strong)'
@@ -6019,11 +6125,13 @@ function AuroraBackdrop() {
       }
     };
 
+    // Live collection, so the per-measure lookup needs no selector query.
+    const obstacleWidgets = document.getElementsByClassName('timeline-fluid-obstacle') as HTMLCollectionOf<HTMLElement>;
+
     const getTimelineWidgetRect = (): [number, number, number, number] => {
       const viewportWidth = Math.max(window.innerWidth, 1);
       const viewportHeight = Math.max(window.innerHeight, 1);
-      const widgets = Array.from(document.querySelectorAll<HTMLElement>('.timeline-fluid-obstacle'));
-      const visibleWidget = widgets.find((widget) => {
+      const visibleWidget = Array.from(obstacleWidgets).find((widget) => {
         const rect = widget.getBoundingClientRect();
         const style = window.getComputedStyle(widget);
 
@@ -6050,6 +6158,24 @@ function AuroraBackdrop() {
         Math.max(0, Math.min(1, rect.right / viewportWidth)),
         Math.max(0, Math.min(1, 1 - rect.top / viewportHeight)),
       ];
+    };
+
+    // Measuring inside the rAF forced a synchronous style + layout pass every
+    // frame (before the camera's own rAF writes, so layout ran twice while
+    // panning/zooming). Measure right after the frame renders instead, when
+    // layout is already clean, and draw with the one-frame-old rect.
+    let widgetRect: [number, number, number, number] = [-1, -1, -1, -1];
+    let widgetRectMeasureTimeout = 0;
+
+    const scheduleWidgetRectMeasure = () => {
+      if (widgetRectMeasureTimeout !== 0 || disposed) {
+        return;
+      }
+
+      widgetRectMeasureTimeout = window.setTimeout(() => {
+        widgetRectMeasureTimeout = 0;
+        widgetRect = getTimelineWidgetRect();
+      }, 0);
     };
 
     const stepFluid = (frameSeconds: number, elapsedSeconds: number) => {
@@ -6213,7 +6339,6 @@ function AuroraBackdrop() {
       gl.uniform1i(renderUniforms.dyeMap, 1);
       gl.uniform2f(renderUniforms.resolution, canvas.width, canvas.height);
       gl.uniform2f(renderUniforms.fluidTexel, 1 / velocityTarget.width, 1 / velocityTarget.height);
-      const widgetRect = getTimelineWidgetRect();
       gl.uniform4f(renderUniforms.widgetRect, widgetRect[0], widgetRect[1], widgetRect[2], widgetRect[3]);
       gl.uniform1f(renderUniforms.elapsedTime, elapsedSeconds);
       gl.uniform1f(renderUniforms.emitterDebug, emitterDebugVisibleRef.current ? 1 : 0);
@@ -6231,6 +6356,7 @@ function AuroraBackdrop() {
       updatePointerDecay(frameSeconds);
       stepFluid(fluidFrameSeconds, fluidElapsedSeconds);
       renderFluid(fluidElapsedSeconds);
+      scheduleWidgetRectMeasure();
     };
 
     const render = (now: number) => {
@@ -6251,6 +6377,7 @@ function AuroraBackdrop() {
       }
 
       resize();
+      widgetRect = getTimelineWidgetRect();
       drawFrame(startedAt + 1000);
 
       if (!reducedMotionQuery.matches) {
@@ -6265,6 +6392,7 @@ function AuroraBackdrop() {
     return () => {
       disposed = true;
       window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(widgetRectMeasureTimeout);
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', updatePointerFromEvent);
       velocityTargets?.forEach(deleteFluidTarget);
@@ -6766,6 +6894,7 @@ function DesktopTimelineExperience({
         : copy.singleBoardDescription(boardView.label);
   const timelineWorldLeft = canvasLayout.timelineX + timelineStartDay * TIMELINE_PIXELS_PER_DAY;
   const timelineWidthWithRail = timelineWidth + LABEL_RAIL_WIDTH;
+  useSeedWorldMapZoom(worldRef, zoom);
 
   return (
     <section className="relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden">
@@ -6795,7 +6924,6 @@ function DesktopTimelineExperience({
             transform: getTimelineWorldTransform(camera, zoom),
             transformOrigin: '0 0',
             width: `${canvasLayout.worldWidth}px`,
-            ['--map-zoom' as string]: String(getMapZoomCssValue(zoom)),
           }}
         >
           <motion.div
@@ -7149,6 +7277,7 @@ function MobileTimelineExperience({
         : copy.singleBoardDescriptionMobile(boardView.label);
   const timelineWorldLeft = canvasLayout.timelineX + timelineStartDay * TIMELINE_PIXELS_PER_DAY;
   const timelineWidthWithRail = timelineWidth + MOBILE_LABEL_RAIL_WIDTH;
+  useSeedWorldMapZoom(worldRef, zoom);
 
   return (
     <section className="relative h-[100dvh] min-h-[100dvh] w-full overflow-hidden">
@@ -7190,7 +7319,6 @@ function MobileTimelineExperience({
             transform: getTimelineWorldTransform(camera, zoom),
             transformOrigin: '0 0',
             width: `${canvasLayout.worldWidth}px`,
-            ['--map-zoom' as string]: String(getMapZoomCssValue(zoom)),
           }}
         >
           <motion.div
@@ -7649,33 +7777,34 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
   const mobileTimelineVerticalScale = 1;
   const desktopTimelineContentHeight = getTimelineMinHeight(timelineData.processedCompanies, false, desktopTimelineVerticalScale);
   const mobileTimelineContentHeight = getTimelineMinHeight(timelineData.processedCompanies, true, mobileTimelineVerticalScale);
-  const desktopTickWindow = useMemo(
-    () =>
-      getTimelineViewportDayWindow({
-        camera: desktopCamera,
-        futureBufferDays: TIMELINE_TICK_FUTURE_BUFFER_DAYS,
-        pastBufferDays: TIMELINE_TICK_PAST_BUFFER_DAYS,
-        viewport: viewportSizes.desktop,
-        zoom,
-      }),
-    [desktopCamera, viewportSizes.desktop, zoom],
+  // Chunked and memoized on the window bounds so ticks are rebuilt (and the grid
+  // re-rendered) only when the camera crosses a chunk, not on every frame.
+  const desktopTickWindow = getChunkedTimelineDayWindow(
+    getTimelineViewportDayWindow({
+      camera: desktopCamera,
+      futureBufferDays: TIMELINE_TICK_FUTURE_BUFFER_DAYS,
+      pastBufferDays: TIMELINE_TICK_PAST_BUFFER_DAYS,
+      viewport: viewportSizes.desktop,
+      zoom,
+    }),
   );
-  const mobileTickWindow = useMemo(
-    () =>
-      getTimelineViewportDayWindow({
-        camera: mobileCamera,
-        compact: true,
-        futureBufferDays: TIMELINE_TICK_FUTURE_BUFFER_DAYS,
-        pastBufferDays: TIMELINE_TICK_PAST_BUFFER_DAYS,
-        viewport: viewportSizes.mobile,
-        zoom: mobileZoom,
-      }),
-    [mobileCamera, mobileZoom, viewportSizes.mobile],
+  const mobileTickWindow = getChunkedTimelineDayWindow(
+    getTimelineViewportDayWindow({
+      camera: mobileCamera,
+      compact: true,
+      futureBufferDays: TIMELINE_TICK_FUTURE_BUFFER_DAYS,
+      pastBufferDays: TIMELINE_TICK_PAST_BUFFER_DAYS,
+      viewport: viewportSizes.mobile,
+      zoom: mobileZoom,
+    }),
   );
-  const {monthTicks, yearTicks} = useMemo(() => buildTicks(desktopTickWindow), [desktopTickWindow]);
+  const {monthTicks, yearTicks} = useMemo(
+    () => buildTicks({endDay: desktopTickWindow.endDay, startDay: desktopTickWindow.startDay}),
+    [desktopTickWindow.endDay, desktopTickWindow.startDay],
+  );
   const {monthTicks: mobileMonthTicks, yearTicks: mobileYearTicks} = useMemo(
-    () => buildTicks(mobileTickWindow),
-    [mobileTickWindow],
+    () => buildTicks({endDay: mobileTickWindow.endDay, startDay: mobileTickWindow.startDay}),
+    [mobileTickWindow.endDay, mobileTickWindow.startDay],
   );
 
   const latestCompany = useMemo(() => {

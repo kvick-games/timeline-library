@@ -25,6 +25,22 @@ export function parseTimelineDate(input: string) {
   return new Date(`${input}T00:00:00Z`);
 }
 
+// toLocaleDateString builds a fresh Intl.DateTimeFormat on every call, which
+// dominates render time when hundreds of dates are formatted per commit.
+const utcDateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function formatUtcDateCached(date: Date, options: Intl.DateTimeFormatOptions) {
+  const key = JSON.stringify(options);
+  let formatter = utcDateFormatters.get(key);
+
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US', {timeZone: 'UTC', ...options});
+    utcDateFormatters.set(key, formatter);
+  }
+
+  return formatter.format(date);
+}
+
 export function formatTimelineDate(
   input: string | Date,
   options: Intl.DateTimeFormatOptions = {month: 'short', day: 'numeric', year: 'numeric'},
@@ -37,24 +53,14 @@ export function formatTimelineDate(
   }
 
   if (precision === 'year') {
-    return parsedDate.toLocaleDateString('en-US', {
-      timeZone: 'UTC',
-      year: 'numeric',
-    });
+    return formatUtcDateCached(parsedDate, {year: 'numeric'});
   }
 
   if (precision === 'month') {
-    return parsedDate.toLocaleDateString('en-US', {
-      timeZone: 'UTC',
-      month: 'short',
-      year: 'numeric',
-    });
+    return formatUtcDateCached(parsedDate, {month: 'short', year: 'numeric'});
   }
 
-  return parsedDate.toLocaleDateString('en-US', {
-    timeZone: 'UTC',
-    ...options,
-  });
+  return formatUtcDateCached(parsedDate, options);
 }
 
 export function formatTimelineDateRange(

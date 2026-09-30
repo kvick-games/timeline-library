@@ -15,9 +15,19 @@
   --panel-shadow: 0 36px 80px -38px rgba(0, 0, 0, 0.75);
 }
 
+/* Zoom consumers read --map-zoom-frame first. applyTimelineWorldTransform writes
+   it straight onto them during camera motion; it is registered non-inherited,
+   so a write restyles only the consumer, not its subtree (an inherited
+   --map-zoom write restyles the whole world). At rest it is unset and the
+   consumers fall back to the inherited --map-zoom. */
+@property --map-zoom-frame {
+  syntax: '*';
+  inherits: false;
+}
+
 /* Scales with the world canvas (e.g. product-line badges on the rail). */
 .timeline-map-label {
-  font-size: calc(var(--label-size, 12) * var(--map-zoom, 1) * 1px);
+  font-size: calc(var(--label-size, 12) * var(--map-zoom-frame, var(--map-zoom, 1)) * 1px);
   transition: none !important;
 }
 
@@ -29,7 +39,7 @@
 
 .timeline-map-screen-fixed {
   pointer-events: auto;
-  transform: scale(calc(1 / var(--map-zoom, 1)));
+  transform: scale(calc(1 / var(--map-zoom-frame, var(--map-zoom, 1))));
   transform-origin: center center;
   backface-visibility: hidden;
   will-change: transform;
@@ -39,11 +49,11 @@
    when the on-screen gap (world width × zoom) gets too narrow to read. */
 .timeline-gap-collapse {
   display: inline-block;
-  opacity: clamp(0, calc((var(--gap-world-width, 9999) * var(--map-zoom, 1) - 34) / 26), 1);
+  opacity: clamp(0, calc((var(--gap-world-width, 9999) * var(--map-zoom-frame, var(--map-zoom, 1)) - 34) / 26), 1);
   transform: scale(
     calc(
-      min(1, 1 / var(--map-zoom, 1)) *
-        (0.7 + 0.3 * clamp(0, calc((var(--gap-world-width, 9999) * var(--map-zoom, 1) - 34) / 26), 1))
+      min(1, 1 / var(--map-zoom-frame, var(--map-zoom, 1))) *
+        (0.7 + 0.3 * clamp(0, calc((var(--gap-world-width, 9999) * var(--map-zoom-frame, var(--map-zoom, 1)) - 34) / 26), 1))
     )
   );
   transform-origin: center center;
@@ -52,10 +62,17 @@
     transform 0.18s ease;
 }
 
+/* The collapse transform/opacity derive from --map-zoom, so every zoom frame
+   would cancel and restart these transitions on every gap label. The zoom ramp
+   is already continuous, so skip transitions while the camera is moving. */
+[data-camera-moving] .timeline-gap-collapse {
+  transition: none;
+}
+
 .timeline-gap:hover .timeline-gap-collapse,
 .timeline-gap:focus-within .timeline-gap-collapse {
   opacity: 1;
-  transform: scale(min(1, 1 / var(--map-zoom, 1)));
+  transform: scale(min(1, 1 / var(--map-zoom-frame, var(--map-zoom, 1))));
   z-index: 40;
 }
 
@@ -65,7 +82,7 @@
 
 /* Counter-scales the world zoom so the tooltip stays a constant screen size. */
 .timeline-gap-tooltip {
-  transform: translateX(-50%) scale(calc(1 / var(--map-zoom, 1)));
+  transform: translateX(-50%) scale(calc(1 / var(--map-zoom-frame, var(--map-zoom, 1))));
   transform-origin: top center;
   margin-top: 6px;
 }
@@ -299,15 +316,25 @@ body::before {
 
 @keyframes quiet-extension-flow {
   0% {
-    background-position: 0 0;
+    transform: translateX(0);
   }
 
   100% {
-    background-position: 28px 0;
+    transform: translateX(28px);
   }
 }
 
+/* The dashes scroll by translating a strip one tile wider than the line, so the
+   animation runs on the compositor instead of repainting every frame (a
+   background-position animation repaints each frame). */
 .quiet-extension-flow {
+  overflow: hidden;
+}
+
+.quiet-extension-flow::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 -28px;
   animation: quiet-extension-flow var(--quiet-flow-duration, 6.2s) linear infinite;
   background-image: repeating-linear-gradient(
     90deg,
@@ -317,7 +344,7 @@ body::before {
     transparent 18px
   );
   background-size: 28px 100%;
-  will-change: background-position;
+  will-change: transform;
 }
 
 .timeline-border-sheen {
@@ -367,7 +394,7 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quiet-extension-flow {
+  .quiet-extension-flow::before {
     animation: none;
   }
 
