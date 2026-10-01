@@ -1498,6 +1498,169 @@ function formatGapCadenceLabel(gap: number, averageGap: number | null): string |
   } than this line's ${averageGap}-day average`;
 }
 
+// Release labels are angled pills beside their pin. They live in world space and
+// scale with the camera, so labels that collide keep colliding at every zoom.
+// getReleaseLabelPlacements lifts the earlier of two colliding labels onto a
+// leader line until it clears the later one. Earlier labels always sit higher,
+// so a leader never passes through a later label.
+//
+// Hosts restyle and reposition these labels, so the geometry is measured from a
+// rendered label rather than assumed.
+type ReleaseLabelGeometry = {
+  // Default position of the pill's bottom-left corner relative to the pin, y up.
+  anchorX: number;
+  anchorY: number;
+  angleRad: number;
+  font: string;
+  fontSizePx: number;
+  heightPx: number;
+  horizontalChromePx: number;
+  letterSpacingPx: number;
+};
+
+type ReleaseLabelPlacement = {
+  // Height of the pill's rounded end above the pin; 0 means no leader line.
+  leaderHeight: number;
+  lift: number;
+  shiftX: number;
+};
+
+const RELEASE_LABEL_CLEARANCE_PX = 3;
+const RELEASE_LABEL_MIN_LIFT_PX = 4;
+const RELEASE_LABEL_MIN_LEADER_PX = 12;
+const RELEASE_LABEL_MAX_LIFT_PX = 132;
+const RELEASE_LABEL_MEASURE_SELECTOR =
+  '[data-timeline-pin]:not([aria-current]):not([data-timeline-event-type]) .timeline-map-screen-label';
+const releaseLabelGeometryCache = new Map<boolean, ReleaseLabelGeometry>();
+let releaseLabelMeasureContext: CanvasRenderingContext2D | null | undefined;
+
+function parseCssPx(value: string | undefined) {
+  const parsed = Number.parseFloat(value ?? '');
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function measureReleaseLabelGeometry(label: HTMLElement): ReleaseLabelGeometry | null {
+  const shell = label.parentElement;
+
+  if (!shell) {
+    return null;
+  }
+
+  const shellStyle = getComputedStyle(shell);
+  const labelStyle = getComputedStyle(label);
+  const [translateX, translateY] = shellStyle.translate === 'none' ? [] : shellStyle.translate.split(' ');
+  const angleDeg = shellStyle.rotate === 'none' ? 0 : -parseCssPx(shellStyle.rotate);
+
+  return {
+    anchorX: parseCssPx(shellStyle.left) + parseCssPx(translateX),
+    anchorY: -(parseCssPx(shellStyle.top) + shell.offsetHeight + parseCssPx(translateY)),
+    angleRad: (angleDeg * Math.PI) / 180,
+    font: `${labelStyle.fontWeight} ${labelStyle.fontSize} ${labelStyle.fontFamily}`,
+    fontSizePx: parseCssPx(labelStyle.fontSize),
+    heightPx: label.offsetHeight,
+    horizontalChromePx:
+      parseCssPx(labelStyle.paddingLeft) +
+      parseCssPx(labelStyle.paddingRight) +
+      parseCssPx(labelStyle.borderLeftWidth) +
+      parseCssPx(labelStyle.borderRightWidth),
+    letterSpacingPx: parseCssPx(labelStyle.letterSpacing),
+  };
+}
+
+function measureReleaseLabelWidth(text: string, geometry: ReleaseLabelGeometry) {
+  if (releaseLabelMeasureContext === undefined) {
+    releaseLabelMeasureContext = document.createElement('canvas').getContext('2d');
+  }
+
+  const context = releaseLabelMeasureContext;
+  let textWidth = text.length * geometry.fontSizePx * 0.6;
+
+  if (context) {
+    context.font = geometry.font;
+    textWidth = context.measureText(text).width;
+  }
+
+  return textWidth + text.length * geometry.letterSpacingPx + geometry.horizontalChromePx;
+}
+
+function getReleaseLabelPlacements(
+  releases: readonly ProcessedRelease[],
+  geometry: ReleaseLabelGeometry,
+): Map<string, ReleaseLabelPlacement> {
+  const sin = Math.sin(geometry.angleRad);
+  const cos = Math.cos(geometry.angleRad);
+  const band = geometry.heightPx + RELEASE_LABEL_CLEARANCE_PX;
+  const tipHeight = (geometry.heightPx / 2) * cos;
+  // A lifted label slides sideways so its rounded end sits directly above the pin.
+  const liftedShiftX = (geometry.heightPx / 2) * sin - geometry.anchorX;
+  const minLift = Math.max(
+    RELEASE_LABEL_MIN_LIFT_PX,
+    RELEASE_LABEL_MIN_LEADER_PX - geometry.anchorY - tipHeight,
+  );
+
+  const labels = releases
+    .map((release) => ({
+      lift: 0,
+      slug: release.articleSlug,
+      width: measureReleaseLabelWidth(release.name, geometry),
+      x: release.globalDay * TIMELINE_PIXELS_PER_DAY,
+    }))
+    .sort((a, b) => a.x - b.x);
+
+  // Each pill is a band: `n` runs across it (up-left), `s` along it (up-right).
+  const getBand = (x: number, lift: number) => {
+    const anchorX = x + geometry.anchorX + (lift > 0 ? liftedShiftX : 0);
+    const anchorY = geometry.anchorY + lift;
+    return {n: -anchorX * sin + anchorY * cos, s: anchorX * cos + anchorY * sin};
+  };
+
+  type Label = (typeof labels)[number];
+
+  const collides = (earlier: Label, later: Label) => {
+    const a = getBand(earlier.x, earlier.lift);
+    const b = getBand(later.x, later.lift);
+    const alongGap = b.s - a.s;
+
+    return (
+      Math.abs(a.n - b.n) < band &&
+      alongGap < earlier.width + RELEASE_LABEL_CLEARANCE_PX &&
+      -alongGap < later.width + RELEASE_LABEL_CLEARANCE_PX
+    );
+  };
+
+  for (let index = labels.length - 2; index >= 0; index -= 1) {
+    const label = labels[index];
+    const later = labels.slice(index + 1).filter((other) => other.x - label.x < label.width / cos + band);
+
+    if (!later.some((other) => collides(label, other))) {
+      continue;
+    }
+
+    // Each candidate rests this label just above one of the later labels.
+    const liftedBaseN = getBand(label.x, 0).n - liftedShiftX * sin;
+    const candidates = later
+      .map((other) => Math.max(minLift, (getBand(other.x, other.lift).n + band - liftedBaseN) / cos + 0.5))
+      .sort((a, b) => a - b);
+    const lift = candidates.find((candidate) =>
+      later.every((other) => !collides({...label, lift: candidate}, other)),
+    );
+
+    label.lift = Math.min(RELEASE_LABEL_MAX_LIFT_PX, lift ?? candidates[candidates.length - 1]);
+  }
+
+  return new Map(
+    labels.map((label): [string, ReleaseLabelPlacement] => {
+      const lift = Math.round(label.lift);
+      return [
+        label.slug,
+        lift > 0
+          ? {leaderHeight: geometry.anchorY + lift + tipHeight, lift, shiftX: liftedShiftX}
+          : {leaderHeight: 0, lift: 0, shiftX: 0},
+      ];
+    }),
+  );
+}
+
 function getScaledTimelineSpacing(value: number, verticalScale = 1) {
   return Math.max(1, Math.round(value * verticalScale));
 }
@@ -3436,6 +3599,34 @@ function ProductLineTimelineLane({
     ? 'timeline-map-screen-label whitespace-nowrap rounded-[0.7rem] border px-1.5 py-0.5 font-bold tracking-[0.01em] shadow-[var(--soft-shadow)] backdrop-blur-sm'
     : 'timeline-map-screen-label whitespace-nowrap rounded-[0.8rem] border bg-[var(--surface-strong)] px-2 py-1 font-bold tracking-[0.015em] shadow-[var(--soft-shadow)] group-hover:bg-[var(--surface)]';
   const releaseLabelFontSize = compact ? 10 : 12;
+  const laneRef = useRef<HTMLDivElement>(null);
+  const [releaseLabelGeometry, setReleaseLabelGeometry] = useState(
+    () => releaseLabelGeometryCache.get(compact) ?? null,
+  );
+  const releaseLabelPlacements = useMemo(
+    () => (releaseLabelGeometry ? getReleaseLabelPlacements(productLine.releases, releaseLabelGeometry) : null),
+    [productLine.releases, releaseLabelGeometry],
+  );
+
+  // Measure once per layout mode from whichever lane first renders a label; the
+  // cache hands the result to every other lane on its next render.
+  useLayoutEffect(() => {
+    let geometry = releaseLabelGeometryCache.get(compact);
+
+    if (!geometry) {
+      const label = laneRef.current?.querySelector<HTMLElement>(RELEASE_LABEL_MEASURE_SELECTOR);
+      geometry = label ? measureReleaseLabelGeometry(label) ?? undefined : undefined;
+
+      if (!geometry) {
+        return;
+      }
+
+      releaseLabelGeometryCache.set(compact, geometry);
+    }
+
+    const measured = geometry;
+    setReleaseLabelGeometry((current) => (current === measured ? current : measured));
+  });
   const branchSource = getBranchSourceLine(company.productLines, productLineIndex);
   const trackStartOffsetPx =
     branchSource
@@ -3454,6 +3645,7 @@ function ProductLineTimelineLane({
       transition={{
         opacity: TIMELINE_FILTER_ENTER_TRANSITION,
       }}
+      ref={laneRef}
       className="relative z-10 shrink-0 hover:z-40 focus-within:z-40"
       style={{height: `${lineHeight}px`}}
     >
@@ -3515,6 +3707,8 @@ function ProductLineTimelineLane({
             : undefined;
         const isGeneralEvent = release.eventKind === 'event';
         const openActionLabel = isGeneralEvent ? 'Open event' : 'Open release';
+        const labelPlacement = releaseLabelPlacements?.get(release.articleSlug);
+        const liftedLabel = labelPlacement && labelPlacement.lift > 0 ? labelPlacement : null;
         const markerBoxShadow = isActiveArticle
           ? `0 0 0 ${compact ? 3 : 4}px rgba(237, 242, 250, 0.92), 0 0 0 ${compact ? 7 : 8}px color-mix(in srgb, ${company.accent} 48%, transparent)`
           : isLandmarkRelease
@@ -3619,6 +3813,21 @@ function ProductLineTimelineLane({
               />
             ) : null}
 
+            {isReleaseVisible && liftedLabel ? (
+              // Sits below every release (z-20) so it passes behind neighbouring labels.
+              <div
+                aria-hidden="true"
+                data-timeline-label-leader
+                className="pointer-events-none absolute top-1/2 z-[15] w-px"
+                style={{
+                  left: `${leftOffsetPx}px`,
+                  height: `${liftedLabel.leaderHeight}px`,
+                  transform: 'translate(-50%, -100%)',
+                  background: `linear-gradient(to top, ${toRgbaFromHex(company.accent, 0.2)}, ${toRgbaFromHex(company.accent, isActiveArticle ? 0.9 : 0.6)})`,
+                }}
+              />
+            ) : null}
+
             {isReleaseVisible ? (
               <motion.div
                 initial={{opacity: 0, scale: 0.82, y: compact ? 6 : 8}}
@@ -3677,7 +3886,14 @@ function ProductLineTimelineLane({
                       />
                     </div>
 
-                    <div className={`${releaseLabelShellClass} z-[2]`}>
+                    <div
+                      className={`${releaseLabelShellClass} z-[2]`}
+                      style={
+                        liftedLabel
+                          ? {marginLeft: `${liftedLabel.shiftX}px`, marginTop: `${-liftedLabel.lift}px`}
+                          : undefined
+                      }
+                    >
                       <div
                         className={`${releaseLabelBodyClass} ${
                           // The fluid behind the timeline redraws every frame, so each
