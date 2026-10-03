@@ -587,9 +587,11 @@ function isWideArticleLogoMark(mark: ArticleLogoMark | undefined) {
   return mark ? getTimelineDefinition().wideLogoMarks.includes(mark) : false;
 }
 
+// Asset paths come from the host's timeline definition and are already resolved
+// against the host's base URL. The library's own BASE_URL is baked in at library
+// build time ("/"), so prefixing it breaks hosts served from a subpath.
 function getPublicAssetPath(path: string) {
-  const basePath = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
-  return `${basePath}${path.replace(/^\/+/, '')}`;
+  return path;
 }
 
 type AppRoute = TimelineExperienceRoute;
