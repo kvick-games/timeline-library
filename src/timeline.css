@@ -149,6 +149,116 @@
   font-weight: 700;
 }
 
+/* Leader line from a pin up to its lifted label. On hover the label rises by
+   --timeline-label-hover-lift (hosts that change the hover offset override it),
+   so the leader grows with it, glows, and comes in front of neighbouring labels. */
+.timeline-label-leader {
+  --timeline-label-hover-lift: 4px;
+  --leader-strength: 60%;
+  position: absolute;
+  top: 50%;
+  z-index: 15;
+  width: 1px;
+  height: var(--leader-height);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--leader-accent) 20%, transparent),
+    color-mix(in srgb, var(--leader-accent) var(--leader-strength), transparent)
+  );
+  transition: height 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timeline-label-leader--compact {
+  --timeline-label-hover-lift: 0px;
+}
+
+.timeline-label-leader--selected {
+  --leader-strength: 90%;
+}
+
+.timeline-label-leader::before,
+.timeline-label-leader::after {
+  content: '';
+  position: absolute;
+  inset: 0 -0.5px;
+  border-radius: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.timeline-label-leader::after {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--leader-accent) 70%, transparent),
+    color-mix(in srgb, var(--leader-accent) 70%, #ffffff)
+  );
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--leader-accent) 75%, transparent),
+    0 0 14px color-mix(in srgb, var(--leader-accent) 40%, transparent);
+  transition: opacity 300ms ease;
+}
+
+/* A short highlight that runs from the pin up to the label. */
+.timeline-label-leader::before {
+  z-index: 1;
+  background: linear-gradient(
+      to top,
+      transparent,
+      color-mix(in srgb, var(--leader-accent) 30%, #ffffff),
+      transparent
+    )
+    0 300% / 100% 50% no-repeat;
+}
+
+.timeline-release-slot:has(> * [data-timeline-pin]:focus-visible) > .timeline-label-leader {
+  z-index: 45;
+  height: calc(var(--leader-height) + var(--timeline-label-hover-lift));
+}
+
+@media (hover: hover) {
+  .timeline-release-slot:has(> * [data-timeline-pin]:hover) > .timeline-label-leader {
+    z-index: 45;
+    height: calc(var(--leader-height) + var(--timeline-label-hover-lift));
+  }
+
+  .timeline-release-slot:has(> * [data-timeline-pin]:hover) > .timeline-label-leader::after {
+    opacity: 1;
+  }
+
+  .timeline-release-slot:has(> * [data-timeline-pin]:hover) > .timeline-label-leader::before {
+    animation: timeline-label-leader-sheen 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+.timeline-release-slot:has(> * [data-timeline-pin]:focus-visible) > .timeline-label-leader::after {
+  opacity: 1;
+}
+
+@keyframes timeline-label-leader-sheen {
+  0% {
+    background-position: 0 300%;
+    opacity: 1;
+  }
+
+  100% {
+    background-position: 0 -200%;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-label-leader,
+  .timeline-label-leader::after {
+    transition: none;
+  }
+
+  .timeline-label-leader::before {
+    animation: none !important;
+  }
+}
+
 @keyframes timeline-pin-selection-pulse {
   0%,
   100% {

@@ -1529,6 +1529,8 @@ const RELEASE_LABEL_CLEARANCE_PX = 3;
 const RELEASE_LABEL_MIN_LIFT_PX = 4;
 const RELEASE_LABEL_MIN_LEADER_PX = 12;
 const RELEASE_LABEL_MAX_LIFT_PX = 132;
+// The leader runs this far past the pill's rounded end, tucked under the opaque pill.
+const RELEASE_LABEL_LEADER_TUCK_PX = 4;
 const RELEASE_LABEL_MEASURE_SELECTOR =
   '[data-timeline-pin]:not([aria-current]):not([data-timeline-event-type]) .timeline-map-screen-label';
 const releaseLabelGeometryCache = new Map<boolean, ReleaseLabelGeometry>();
@@ -1654,7 +1656,11 @@ function getReleaseLabelPlacements(
       return [
         label.slug,
         lift > 0
-          ? {leaderHeight: geometry.anchorY + lift + tipHeight, lift, shiftX: liftedShiftX}
+          ? {
+              leaderHeight: geometry.anchorY + lift + tipHeight + RELEASE_LABEL_LEADER_TUCK_PX,
+              lift,
+              shiftX: liftedShiftX,
+            }
           : {leaderHeight: 0, lift: 0, shiftX: 0},
       ];
     }),
@@ -3734,7 +3740,7 @@ function ProductLineTimelineLane({
               opacity: TIMELINE_FILTER_ENTER_TRANSITION,
               scale: TIMELINE_FILTER_ENTER_TRANSITION,
             }}
-            className="absolute inset-0"
+            className="timeline-release-slot absolute inset-0"
           >
             {previousRelease && isConnectorVisible ? (
               <>
@@ -3818,12 +3824,13 @@ function ProductLineTimelineLane({
               <div
                 aria-hidden="true"
                 data-timeline-label-leader
-                className="pointer-events-none absolute top-1/2 z-[15] w-px"
+                className={`timeline-label-leader ${compact ? 'timeline-label-leader--compact' : ''} ${
+                  isActiveArticle ? 'timeline-label-leader--selected' : ''
+                }`}
                 style={{
                   left: `${leftOffsetPx}px`,
-                  height: `${liftedLabel.leaderHeight}px`,
-                  transform: 'translate(-50%, -100%)',
-                  background: `linear-gradient(to top, ${toRgbaFromHex(company.accent, 0.2)}, ${toRgbaFromHex(company.accent, isActiveArticle ? 0.9 : 0.6)})`,
+                  ['--leader-accent' as string]: company.accent,
+                  ['--leader-height' as string]: `${liftedLabel.leaderHeight}px`,
                 }}
               />
             ) : null}
