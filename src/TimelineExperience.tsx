@@ -27,7 +27,8 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
-import {AnimatePresence, motion} from 'motion/react';
+import {AnimatePresence, animate, motion, useDragControls, useMotionValue} from 'motion/react';
+import type {PanInfo} from 'motion/react';
 import {
   formatTimelineDate,
   formatTimelineDateRange,
@@ -574,6 +575,13 @@ const ARTICLE_PANEL_MAX_WIDTH = 760;
 const ARTICLE_PANEL_MAX_VIEWPORT_RATIO = 0.58;
 const ARTICLE_TIMELINE_FOCUS_CENTER_RATIO = 0.58;
 const DEFAULT_TIMELINE_FOCUS_ANCHOR = {x: 0.5, y: 0.46};
+const MOBILE_ARTICLE_PEEK_VIEWPORT_RATIO = 0.46;
+const MOBILE_ARTICLE_SHEET_FLICK_VELOCITY = 500;
+const MOBILE_ARTICLE_SHEET_SPRING = {type: 'spring', stiffness: 420, damping: 42, mass: 0.9} as const;
+
+function getMobileArticlePeekHeight(viewportHeight: number) {
+  return Math.round(viewportHeight * MOBILE_ARTICLE_PEEK_VIEWPORT_RATIO);
+}
 
 function isWideArticleLogoMark(mark: ArticleLogoMark | undefined) {
   return mark ? getTimelineDefinition().wideLogoMarks.includes(mark) : false;
@@ -2252,7 +2260,8 @@ function getTimelineFocusInsets(
   }
 
   if (compact) {
-    return {bottom: 40, left: 16, right: 16, top: 64};
+    // Keep the focused release in the strip of timeline left visible above the peeking article sheet.
+    return {bottom: getMobileArticlePeekHeight(viewport.height) + 12, left: 16, right: 16, top: 64};
   }
 
   return {
@@ -4752,12 +4761,147 @@ function ArticleFractalBackdrop({accent, seedKey}: {accent: string; seedKey: str
   );
 }
 
+function MobileArticleSheet({
+  backdrop,
+  body,
+  header,
+  onDismiss,
+  resetKey,
+}: {
+  backdrop: React.ReactNode;
+  body: React.ReactNode;
+  header: React.ReactNode;
+  onDismiss: () => void;
+  resetKey: string;
+}) {
+  const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const dragControls = useDragControls();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const didDragRef = useRef(false);
+  const peekY = viewportHeight - getMobileArticlePeekHeight(viewportHeight);
+  // Starts offscreen so the first settle slides the sheet up into its peek position.
+  const y = useMotionValue(viewportHeight);
+
+  useEffect(() => {
+    const updateViewportHeight = () => setViewportHeight(window.innerHeight);
+
+    window.addEventListener('resize', updateViewportHeight);
+    return () => window.removeEventListener('resize', updateViewportHeight);
+  }, []);
+
+  useEffect(() => {
+    const controls = animate(y, isExpanded ? 0 : peekY, MOBILE_ARTICLE_SHEET_SPRING);
+    return () => controls.stop();
+  }, [isExpanded, peekY, y]);
+
+  useEffect(() => {
+    scrollerRef.current?.scrollTo({top: 0});
+  }, [resetKey]);
+
+  const settle = (expanded: boolean) => {
+    setIsExpanded(expanded);
+    // Re-snap even when the state is unchanged, e.g. a short drag that returns to the same stop.
+    animate(y, expanded ? 0 : peekY, MOBILE_ARTICLE_SHEET_SPRING);
+  };
+
+  const startDrag = (event: React.PointerEvent) => {
+    didDragRef.current = false;
+    dragControls.start(event);
+  };
+
+  const handleDragEnd = (_event: PointerEvent, info: PanInfo) => {
+    const currentY = y.get();
+    const dismissY = peekY + (viewportHeight - peekY) * 0.35;
+
+    if (info.velocity.y > MOBILE_ARTICLE_SHEET_FLICK_VELOCITY) {
+      if (isExpanded && currentY < peekY) {
+        settle(false);
+      } else {
+        onDismiss();
+      }
+      return;
+    }
+
+    if (info.velocity.y < -MOBILE_ARTICLE_SHEET_FLICK_VELOCITY) {
+      settle(true);
+      return;
+    }
+
+    if (currentY > dismissY) {
+      onDismiss();
+      return;
+    }
+
+    settle(currentY < peekY / 2);
+  };
+
+  return (
+    <motion.aside
+      key="model-article-panel"
+      drag="y"
+      dragControls={dragControls}
+      dragListener={false}
+      dragConstraints={{bottom: viewportHeight, top: 0}}
+      dragElastic={{bottom: 0.5, top: 0.04}}
+      dragMomentum={false}
+      onDragStart={() => {
+        didDragRef.current = true;
+      }}
+      onDragEnd={handleDragEnd}
+      exit={{y: viewportHeight, transition: {duration: 0.28, ease: [0.4, 0, 1, 1]}}}
+      style={{height: viewportHeight, y}}
+      className="fixed inset-x-0 top-0 z-40 flex flex-col overflow-hidden rounded-t-[1.6rem] border-t border-[var(--edge-strong)] bg-[rgba(8,11,16,0.98)] shadow-[0_-24px_60px_-28px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+    >
+      <div className="relative z-20 shrink-0 touch-none select-none" onPointerDown={startDrag}>
+        <button
+          type="button"
+          aria-label={isExpanded ? 'Collapse article' : 'Expand article'}
+          aria-expanded={isExpanded}
+          onClick={() => {
+            if (!didDragRef.current) {
+              settle(!isExpanded);
+            }
+          }}
+          className="flex h-6 w-full items-end justify-center"
+        >
+          <span className="h-1 w-10 rounded-full bg-[var(--edge-strong)]" />
+        </button>
+        <div className="px-5">{header}</div>
+      </div>
+
+      <div
+        ref={scrollerRef}
+        onPointerDown={isExpanded ? undefined : startDrag}
+        onClick={(event) => {
+          // In the peek state, a plain tap on the article body opens it fully.
+          if (isExpanded || didDragRef.current) {
+            return;
+          }
+          if (event.target instanceof Element && event.target.closest('a, button')) {
+            return;
+          }
+          settle(true);
+        }}
+        className={`relative isolate min-h-0 flex-1 ${
+          isExpanded ? 'overflow-y-auto overscroll-contain' : 'touch-none select-none overflow-hidden'
+        }`}
+      >
+        {backdrop}
+        <article className="px-5 pb-10">{body}</article>
+      </div>
+    </motion.aside>
+  );
+}
+
 function ModelArticlePanel({
+  compact,
   entry,
   onBack,
   onNavigate,
   requestedSlug,
 }: {
+  compact: boolean;
   entry: ModelReleaseIndexEntry | null;
   onBack: () => void;
   onNavigate: (slug: string) => void;
@@ -4780,6 +4924,133 @@ function ModelArticlePanel({
       ? `${entry.name} is tracked as a ${entry.eventTypeLabel.toLowerCase()} from ${entry.companyName} in the ${entry.productLineLabel} line.`
       : copy.routeMissingDetail.replace('{slug}', requestedSlug));
 
+  const backdrop = entry ? <ArticleFractalBackdrop accent={entry.accent} seedKey={requestedSlug} /> : null;
+  const header = (
+    <div className="sticky top-0 z-20 -mx-5 flex items-center justify-between gap-3 border-b border-[var(--edge)] bg-[rgba(8,11,16,0.94)] px-5 py-4 shadow-[0_18px_34px_-28px_rgba(0,0,0,0.95)] backdrop-blur-xl md:static md:mx-0 md:border-b-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--edge)] px-4 text-sm font-medium text-[var(--ink-soft)] transition duration-300 hover:border-[var(--edge-strong)] hover:bg-[var(--surface)] active:scale-[0.98]"
+      >
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
+        {copy.articleBackLabel}
+      </button>
+
+      {entry ? (
+        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--edge)] bg-[var(--surface)] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+          <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.8} />
+          {entry.dateRangeLabel}
+        </span>
+      ) : null}
+    </div>
+  );
+  const body = (
+    <>
+      {entry && logo ? (
+        <div className="mt-6 flex items-start gap-4 md:mt-9">
+          <ArticleLogoGlyph accent={entry.accent} label={logo.modelLabel} mark={logo.modelMark} size="large" />
+          <ArticleLogoGlyph accent={entry.accent} label={entry.companyName} mark={entry.companyLogoMark} size="small" />
+        </div>
+      ) : null}
+
+      <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
+        {article?.eyebrow ?? entry?.eventTypeLabel ?? 'Unknown route'}
+      </p>
+      <h1 className="mt-3 max-w-[12ch] text-4xl leading-none tracking-tighter text-[var(--ink)] md:text-6xl">
+        {title}
+      </h1>
+      <p className="mt-5 max-w-[68ch] text-base leading-8 text-[var(--ink-soft)] md:text-lg">
+        {article?.dek ?? summary}
+      </p>
+
+      {article?.media ? <ArticleMediaFigure media={article.media} /> : null}
+
+      {entry ? (
+        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+          {withDaysSinceFact(
+            article?.facts ?? [
+              {label: 'Company', value: entry.companyName},
+              {label: 'Product line', value: entry.productLineLabel},
+              {label: entry.eventKind === 'event' ? 'Event date' : 'Release date', value: entry.dateRangeLabel},
+              {label: 'Type', value: entry.eventTypeLabel},
+            ],
+            {date: entry.date, eventKind: entry.eventKind},
+          ).map((fact) => (
+            <div key={`${fact.label}-${fact.value}`} className="border-t border-[var(--edge)] pt-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{fact.label}</p>
+              <p className="mt-1 text-sm font-semibold text-[var(--ink)]">{fact.value}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <section className="mt-9 border-t border-[var(--edge)] pt-7">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
+          <BookOpen className="h-4 w-4" strokeWidth={1.8} />
+          Summary
+        </div>
+        <p className="mt-4 text-base leading-8 text-[var(--ink-soft)]">{summary}</p>
+        {article?.impact ? <p className="mt-4 text-base leading-8 text-[var(--ink-soft)]">{article.impact}</p> : null}
+      </section>
+
+      {article?.sections.map((section) => (
+        <section key={section.heading} className="mt-8 border-t border-[var(--edge)] pt-7">
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--ink)]">{section.heading}</h2>
+          <div className="mt-4 space-y-4">
+            {section.body.map((paragraph) => (
+              <p key={paragraph} className="text-base leading-8 text-[var(--ink-soft)]">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {article?.sources.length ? (
+        <section className="mt-8 border-t border-[var(--edge)] pt-7">
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--ink)]">Sources</h2>
+          <div className="mt-4 space-y-2">
+            {article.sources.map((source) => (
+              <a
+                key={source.url}
+                href={source.url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between gap-3 rounded-[1rem] border border-[var(--edge)] px-4 py-3 text-sm text-[var(--ink-soft)] transition duration-300 hover:border-[var(--edge-strong)] hover:bg-[var(--surface)]"
+              >
+                <span>{source.label}</span>
+                <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {entry ? (
+        <div className="mt-8 grid gap-3 border-t border-[var(--edge)] pt-7 sm:grid-cols-2">
+          <ArticleReleaseLink label="Previous" onNavigate={onNavigate} slug={entry.previousSlug} title={entry.previousName} />
+          <ArticleReleaseLink label="Next" onNavigate={onNavigate} slug={entry.nextSlug} title={entry.nextName} />
+        </div>
+      ) : (
+        <div className="mt-8 rounded-[1.1rem] border border-[var(--edge)] bg-[var(--surface)] p-5">
+          <p className="text-sm leading-6 text-[var(--ink-soft)]">This route does not match a known model or event entry.</p>
+        </div>
+      )}
+    </>
+  );
+
+  if (compact) {
+    return (
+      <MobileArticleSheet
+        backdrop={backdrop}
+        body={body}
+        header={header}
+        onDismiss={onBack}
+        resetKey={requestedSlug}
+      />
+    );
+  }
+
   return (
     <motion.aside
       key="model-article-panel"
@@ -4789,116 +5060,10 @@ function ModelArticlePanel({
       transition={{duration: 0.38, ease: [0.22, 1, 0.36, 1]}}
       className="fixed inset-y-0 right-0 z-40 w-full overflow-y-auto border-l border-[var(--edge-strong)] bg-[rgba(8,11,16,0.98)] shadow-[0_34px_100px_-42px_rgba(0,0,0,0.9)] backdrop-blur-xl md:w-[min(760px,58vw)]"
     >
-      {entry ? <ArticleFractalBackdrop accent={entry.accent} seedKey={requestedSlug} /> : null}
+      {backdrop}
       <article className="min-h-full px-5 py-5 md:px-8 md:py-8">
-        <div className="sticky top-0 z-20 -mx-5 flex items-center justify-between gap-3 border-b border-[var(--edge)] bg-[rgba(8,11,16,0.94)] px-5 py-4 shadow-[0_18px_34px_-28px_rgba(0,0,0,0.95)] backdrop-blur-xl md:static md:mx-0 md:border-b-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--edge)] px-4 text-sm font-medium text-[var(--ink-soft)] transition duration-300 hover:border-[var(--edge-strong)] hover:bg-[var(--surface)] active:scale-[0.98]"
-          >
-            <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
-            {copy.articleBackLabel}
-          </button>
-
-          {entry ? (
-            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--edge)] bg-[var(--surface)] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
-              <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.8} />
-              {entry.dateRangeLabel}
-            </span>
-          ) : null}
-        </div>
-
-        {entry && logo ? (
-          <div className="mt-9 flex items-start gap-4">
-            <ArticleLogoGlyph accent={entry.accent} label={logo.modelLabel} mark={logo.modelMark} size="large" />
-            <ArticleLogoGlyph accent={entry.accent} label={entry.companyName} mark={entry.companyLogoMark} size="small" />
-          </div>
-        ) : null}
-
-        <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-          {article?.eyebrow ?? entry?.eventTypeLabel ?? 'Unknown route'}
-        </p>
-        <h1 className="mt-3 max-w-[12ch] text-4xl leading-none tracking-tighter text-[var(--ink)] md:text-6xl">
-          {title}
-        </h1>
-        <p className="mt-5 max-w-[68ch] text-base leading-8 text-[var(--ink-soft)] md:text-lg">
-          {article?.dek ?? summary}
-        </p>
-
-        {article?.media ? <ArticleMediaFigure media={article.media} /> : null}
-
-        {entry ? (
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {withDaysSinceFact(
-              article?.facts ?? [
-                {label: 'Company', value: entry.companyName},
-                {label: 'Product line', value: entry.productLineLabel},
-                {label: entry.eventKind === 'event' ? 'Event date' : 'Release date', value: entry.dateRangeLabel},
-                {label: 'Type', value: entry.eventTypeLabel},
-              ],
-              {date: entry.date, eventKind: entry.eventKind},
-            ).map((fact) => (
-              <div key={`${fact.label}-${fact.value}`} className="border-t border-[var(--edge)] pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{fact.label}</p>
-                <p className="mt-1 text-sm font-semibold text-[var(--ink)]">{fact.value}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        <section className="mt-9 border-t border-[var(--edge)] pt-7">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
-            <BookOpen className="h-4 w-4" strokeWidth={1.8} />
-            Summary
-          </div>
-          <p className="mt-4 text-base leading-8 text-[var(--ink-soft)]">{summary}</p>
-          {article?.impact ? <p className="mt-4 text-base leading-8 text-[var(--ink-soft)]">{article.impact}</p> : null}
-        </section>
-
-        {article?.sections.map((section) => (
-          <section key={section.heading} className="mt-8 border-t border-[var(--edge)] pt-7">
-            <h2 className="text-xl font-semibold tracking-tight text-[var(--ink)]">{section.heading}</h2>
-            <div className="mt-4 space-y-4">
-              {section.body.map((paragraph) => (
-                <p key={paragraph} className="text-base leading-8 text-[var(--ink-soft)]">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </section>
-        ))}
-
-        {article?.sources.length ? (
-          <section className="mt-8 border-t border-[var(--edge)] pt-7">
-            <h2 className="text-xl font-semibold tracking-tight text-[var(--ink)]">Sources</h2>
-            <div className="mt-4 space-y-2">
-              {article.sources.map((source) => (
-                <a
-                  key={source.url}
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-between gap-3 rounded-[1rem] border border-[var(--edge)] px-4 py-3 text-sm text-[var(--ink-soft)] transition duration-300 hover:border-[var(--edge-strong)] hover:bg-[var(--surface)]"
-                >
-                  <span>{source.label}</span>
-                  <ExternalLink className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-                </a>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {entry ? (
-          <div className="mt-8 grid gap-3 border-t border-[var(--edge)] pt-7 sm:grid-cols-2">
-            <ArticleReleaseLink label="Previous" onNavigate={onNavigate} slug={entry.previousSlug} title={entry.previousName} />
-            <ArticleReleaseLink label="Next" onNavigate={onNavigate} slug={entry.nextSlug} title={entry.nextName} />
-          </div>
-        ) : (
-          <div className="mt-8 rounded-[1.1rem] border border-[var(--edge)] bg-[var(--surface)] p-5">
-            <p className="text-sm leading-6 text-[var(--ink-soft)]">This route does not match a known model or event entry.</p>
-          </div>
-        )}
+        {header}
+        {body}
       </article>
     </motion.aside>
   );
@@ -8860,11 +9025,6 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
       return;
     }
 
-    if (!isDesktopViewport) {
-      lastFocusedArticleSlugRef.current = activeArticleSlug;
-      return;
-    }
-
     if (!isReady || isPanning || activePointerIdRef.current !== null) {
       return;
     }
@@ -9739,6 +9899,7 @@ export function TimelineExperience({controllerRef, definition, presentation = fa
       <AnimatePresence>
         {isArticleOpen && !presentation ? (
           <ModelArticlePanel
+            compact={!isDesktopViewport}
             entry={activeArticleEntry}
             onBack={navigateToTimelineRoute}
             onNavigate={navigateToModelSlug}
